@@ -1,0 +1,12 @@
+# Netlify config for Angular SPA client-side routing.
+# Without this, direct visits / reloads of routes like /residents return 404
+# because Netlify looks for a physical file instead of serving index.html.
+
+[build]
+  command = "npm run build"
+  publish = "dist/hostel-expense-tracker/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
