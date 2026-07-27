@@ -1,59 +1,90 @@
-# HostelExpenseTracker
+# Hostel Expense Tracker
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.8.
+Internal web app for a hostel to track **resident monthly fees**, **shared expenses**, and the **remaining balance**. Built as a client-only Angular SPA with localStorage persistence (no backend in Phase 1).
 
-## Development server
+## Features (Phase 1)
 
-To start a local development server, run:
+### Dashboard (`/`)
+- Current month paid / unpaid resident counts (**active residents only**)
+- Month collected total and paid expenses total
+- **Current balance** = all paid payments − all **paid** expenses
+- Unpaid residents list and recent expenses
+- All-time totals (collected, paid expenses, unpaid expenses when any)
+
+### Residents (`/residents`)
+- Add, edit, remove residents
+- Per-resident **monthly fee** (EGP; default suggestion 250)
+- Active / inactive status and filter
+- Inactive residents are excluded from payment tracking counts and unpaid lists
+
+### Payments (`/payments`)
+- Auto-create current month; open months manually
+- Seed payment rows for active residents
+- Mark paid / unpaid, edit amount and notes, store payment date
+- Delete a month (and its payment rows) with confirmation
+
+### Expenses (`/expenses`)
+- Record title, category, amount, date, description, added by
+- **Paid / unpaid** expenses — unpaid are tracked but **do not** reduce balance
+- Edit, delete, and quick mark paid / unpaid
+- Category presets (Electricity, Water, Gas, Internet, Repairs, Cleaning, Supplies, Other)
+
+### UX
+- Responsive layout: burger nav + cards on mobile; horizontal nav + tables on desktop
+- SweetAlert2 for destructive confirms and success toasts
+- Teal / slate Tailwind UI
+
+## Tech stack
+
+| Area | Choice |
+|------|--------|
+| Framework | Angular 22 (standalone components, signals) |
+| Styling | Tailwind CSS 4 |
+| Forms | Angular Reactive Forms (+ template forms for quick payment edits) |
+| Dialogs | SweetAlert2 |
+| State | `HostelStore` + Angular signals |
+| Persistence | `localStorage` (`hostel-expense-tracker-data-v1`) |
+| Tests | Vitest (`ng test`) |
+| Rendering | SPA only (SSR removed for localStorage simplicity) |
+
+## Getting started
 
 ```bash
-ng serve
+npm install
+npm start
+# → http://localhost:4200/
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Other scripts:
 
 ```bash
-ng generate component component-name
+npm run build   # production build → dist/
+npm test        # unit tests (Vitest)
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+On some Windows PowerShell setups, use `npm.cmd` if script execution policy blocks `npm.ps1`.
 
-```bash
-ng generate --help
+## Project structure
+
+```text
+src/app/
+  core/           # constants, HostelStore, storage, SweetAlert helpers
+  models/         # Resident, Payment, Expense, AppData
+  pages/          # dashboard, residents, payments, expenses
+  app.ts          # shell + navigation
+  app.routes.ts
+instructions/     # agent / project context notes (Phase 1 handoff)
 ```
 
-## Building
+## Business rules (short)
 
-To build the project run:
+- Currency: **EGP**
+- Balance uses **only paid payments** and **only paid expenses**
+- Unpaid expenses stay visible for tracking but do not subtract from balance left
+- Inactive residents keep history for all-time collected, but are out of month paid/unpaid UI
 
-```bash
-ng build
-```
+## Notes
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Data lives in the browser (`localStorage`). Clearing site data resets the app.
+- No authentication or multi-device sync in Phase 1.
+- See `instructions/PROJECT_CONTEXT.md` for full domain rules and agent handoff notes.
