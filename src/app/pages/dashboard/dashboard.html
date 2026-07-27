@@ -1,0 +1,189 @@
+﻿<section class="space-y-8">
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="text-sm font-medium text-teal-700">Overview</p>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Dashboard</h1>
+      <div class="mt-2.5 flex flex-wrap items-center gap-2">
+        <span
+          class="inline-flex items-center gap-1.5 rounded-full bg-teal-600 px-3 py-1 text-sm font-semibold text-white shadow-sm"
+        >
+          <svg
+            class="h-3.5 w-3.5 shrink-0 opacity-90"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          {{ stats().monthLabel }}
+        </span>
+        <span
+          class="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-sm font-semibold text-teal-800"
+        >
+          <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" aria-hidden="true"></span>
+          {{ stats().activeResidents }} active residents
+        </span>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a
+        routerLink="/payments"
+        class="rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-700"
+      >
+        Track payments
+      </a>
+      <a
+        routerLink="/expenses"
+        class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+      >
+        Add expense
+      </a>
+    </div>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <article class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
+      <p class="text-sm font-medium text-emerald-800">Paid this month</p>
+      <p class="mt-2 text-3xl font-bold text-emerald-900">{{ stats().paidCount }}</p>
+      <p class="mt-1 text-xs text-emerald-700">Residents marked paid</p>
+    </article>
+
+    <article class="rounded-2xl border border-amber-100 bg-amber-50 p-5 shadow-sm">
+      <p class="text-sm font-medium text-amber-800">Not paid</p>
+      <p class="mt-2 text-3xl font-bold text-amber-900">{{ stats().unpaidCount }}</p>
+      <p class="mt-1 text-xs text-amber-700">Still outstanding</p>
+    </article>
+
+    <article class="rounded-2xl border border-sky-100 bg-sky-50 p-5 shadow-sm">
+      <p class="text-sm font-medium text-sky-800">Collected (month)</p>
+      <p class="mt-2 text-3xl font-bold text-sky-900">
+        {{ stats().monthCollected | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+      </p>
+      <p class="mt-1 text-xs text-sky-700">From paid residents</p>
+    </article>
+
+    <article class="rounded-2xl border border-rose-100 bg-rose-50 p-5 shadow-sm">
+      <p class="text-sm font-medium text-rose-800">Paid expenses (month)</p>
+      <p class="mt-2 text-3xl font-bold text-rose-900">
+        {{ stats().monthExpenses | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+      </p>
+      <p class="mt-1 text-xs text-rose-700">
+        @if (stats().monthUnpaidExpenses > 0) {
+          + {{ stats().monthUnpaidExpenses | currency: 'EGP':'symbol-narrow':'1.0-2' }} unpaid
+        } @else {
+          This month's paid spending
+        }
+      </p>
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-slate-900 p-5 shadow-sm sm:col-span-2 xl:col-span-1">
+      <p class="text-sm font-medium text-slate-300">Current balance</p>
+      <p
+        class="mt-2 text-3xl font-bold"
+        [class.text-emerald-300]="stats().currentBalance >= 0"
+        [class.text-rose-300]="stats().currentBalance < 0"
+      >
+        {{ stats().currentBalance | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+      </p>
+      <p class="mt-1 text-xs text-slate-400">
+        Collected − paid expenses
+      </p>
+    </article>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-3">
+    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
+      <h2 class="text-lg font-semibold text-slate-900">All-time totals</h2>
+      <dl class="mt-4 space-y-3 text-sm">
+        <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+          <dt class="text-slate-600">Total collected</dt>
+          <dd class="font-semibold text-slate-900">
+            {{ stats().totalCollected | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+          </dd>
+        </div>
+        <div class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+          <dt class="text-slate-600">Paid expenses</dt>
+          <dd class="font-semibold text-slate-900">
+            {{ stats().totalExpenses | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+          </dd>
+        </div>
+        @if (stats().totalUnpaidExpenses > 0) {
+          <div class="flex items-center justify-between rounded-xl bg-amber-50 px-3 py-2">
+            <dt class="text-amber-800">Unpaid expenses</dt>
+            <dd class="font-semibold text-amber-900">
+              {{ stats().totalUnpaidExpenses | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+            </dd>
+          </div>
+        }
+        <div class="flex items-center justify-between rounded-xl bg-teal-50 px-3 py-2">
+          <dt class="text-teal-800">Balance left</dt>
+          <dd class="font-semibold text-teal-900">
+            {{ stats().currentBalance | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+          </dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-slate-900">Unpaid this month</h2>
+        <a routerLink="/payments" class="text-sm font-medium text-teal-700 hover:text-teal-800">View all</a>
+      </div>
+      @if (unpaidPayments().length === 0) {
+        <p class="mt-4 rounded-xl bg-emerald-50 px-3 py-4 text-sm text-emerald-800">
+          Everyone is paid for {{ stats().monthLabel }}.
+        </p>
+      } @else {
+        <ul class="mt-4 divide-y divide-slate-100">
+          @for (payment of unpaidPayments(); track payment.id) {
+            <li class="flex items-center justify-between py-3 text-sm">
+              <span class="font-medium text-slate-800">{{ payment.residentName }}</span>
+              <span class="text-slate-600">
+                {{ payment.amount | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </article>
+
+    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-slate-900">Recent expenses</h2>
+        <a routerLink="/expenses" class="text-sm font-medium text-teal-700 hover:text-teal-800">Manage</a>
+      </div>
+      @if (recentExpenses().length === 0) {
+        <p class="mt-4 rounded-xl bg-slate-50 px-3 py-4 text-sm text-slate-600">No expenses recorded yet.</p>
+      } @else {
+        <ul class="mt-4 divide-y divide-slate-100">
+          @for (expense of recentExpenses(); track expense.id) {
+            <li class="py-3">
+              <div class="flex items-start justify-between gap-3 text-sm">
+                <div>
+                  <p class="font-medium text-slate-800">{{ expense.title }}</p>
+                  <p class="text-xs text-slate-500">
+                    {{ expense.category }} · {{ expense.date | date: 'mediumDate' }} · {{ expense.addedBy }}
+                    @if (!expense.paid) {
+                      · <span class="font-semibold text-amber-700">Unpaid</span>
+                    }
+                  </p>
+                </div>
+                <span
+                  class="shrink-0 font-semibold"
+                  [class.text-rose-700]="expense.paid"
+                  [class.text-amber-700]="!expense.paid"
+                >
+                  {{ expense.amount | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+                </span>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </article>
+  </div>
+</section>
