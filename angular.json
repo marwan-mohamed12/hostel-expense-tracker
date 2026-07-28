@@ -29,6 +29,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/hostel-expense-tracker/",
               "budgets": [
                 {
                   "type": "initial",
