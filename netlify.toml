@@ -3,7 +3,7 @@
 # because Netlify looks for a physical file instead of serving index.html.
 
 [build]
-  command = "npm run build"
+  command = "ng build"
   publish = "dist/hostel-expense-tracker/browser"
 
 [[redirects]]
