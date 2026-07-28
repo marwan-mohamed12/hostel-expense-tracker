@@ -1,10 +1,16 @@
-# Netlify config for Angular SPA client-side routing.
-# Without this, direct visits / reloads of routes like /residents return 404
-# because Netlify looks for a physical file instead of serving index.html.
+# Netlify config for Angular SPA.
+# Publish the browser output (not dist/ or dist/<app>/ alone).
+# SPA redirects: client routes like /residents must serve index.html.
 
 [build]
-  command = "ng build"
+  command = "npm run build"
   publish = "dist/hostel-expense-tracker/browser"
+
+# Angular 22 requires Node ^22.22.3 || ^24.15.0 || >=26.
+# Without this, Netlify often uses an older Node and the build fails or
+# publishes an empty/broken site → blank page.
+[build.environment]
+  NODE_VERSION = "22"
 
 [[redirects]]
   from = "/*"
