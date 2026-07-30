@@ -1,6 +1,7 @@
-﻿import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { EXPENSE_CATEGORIES } from '../../core/constants/app.constants';
 import { HostelStore } from '../../core/services/hostel.store';
 import { confirmDelete, showSuccessToast } from '../../core/utils/swal-dialog';
@@ -8,26 +9,25 @@ import { Expense } from '../../models/expense.model';
 
 @Component({
   selector: 'app-expenses',
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, TranslocoPipe],
   templateUrl: './expenses.html',
 })
 export class ExpensesPage {
   private readonly store = inject(HostelStore);
   private readonly fb = inject(FormBuilder);
+  private readonly transloco = inject(TranslocoService);
 
   readonly categories = EXPENSE_CATEGORIES;
   readonly expenses = this.store.expensesNewestFirst;
   readonly editingId = signal<string | null>(null);
   readonly showForm = signal(false);
 
-  /** Amounts already paid (reduce balance). */
   readonly paidTotal = computed(() =>
     this.expenses()
       .filter((expense) => expense.paid)
       .reduce((sum, expense) => sum + expense.amount, 0),
   );
 
-  /** Recorded but not paid yet (do not reduce balance). */
   readonly unpaidTotal = computed(() =>
     this.expenses()
       .filter((expense) => !expense.paid)
@@ -110,9 +110,10 @@ export class ExpensesPage {
 
   async remove(expense: Expense): Promise<void> {
     const confirmed = await confirmDelete({
-      title: `Delete expense?`,
-      text: `"${expense.title}" will be permanently removed.`,
-      confirmButtonText: 'Yes, delete expense',
+      title: this.transloco.translate('expenses.deleteTitle'),
+      text: this.transloco.translate('expenses.deleteText', { title: expense.title }),
+      confirmButtonText: this.transloco.translate('expenses.deleteConfirm'),
+      cancelButtonText: this.transloco.translate('common.cancel'),
     });
 
     if (!confirmed) {
@@ -124,6 +125,9 @@ export class ExpensesPage {
       this.cancelForm();
     }
 
-    await showSuccessToast('Expense deleted', `"${expense.title}" was removed.`);
+    await showSuccessToast(
+      this.transloco.translate('expenses.deletedTitle'),
+      this.transloco.translate('expenses.deletedText', { title: expense.title }),
+    );
   }
 }

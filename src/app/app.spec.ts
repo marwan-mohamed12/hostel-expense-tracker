@@ -1,13 +1,54 @@
-﻿import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideTransloco, TranslocoService } from '@jsverse/transloco';
+import { of } from 'rxjs';
 import { App } from './app';
+import { LanguageService } from './core/i18n/language.service';
+
+const en = {
+  app: { brand: 'Hostel', title: 'Expense Tracker', documentTitle: 'Hostel Expense Tracker' },
+  nav: {
+    dashboard: 'Dashboard',
+    residents: 'Residents',
+    payments: 'Payments',
+    expenses: 'Expenses',
+    mainAria: 'Main',
+    mobileAria: 'Mobile',
+    toggleMenu: 'Toggle navigation menu',
+  },
+  lang: { switchTo: 'العربية', switchToEn: 'English', aria: 'Switch language' },
+};
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTransloco({
+          config: {
+            availableLangs: ['en', 'ar'],
+            defaultLang: 'en',
+            reRenderOnLangChange: true,
+          },
+          loader: class {
+            getTranslation() {
+              return of(en);
+            }
+          },
+        }),
+        LanguageService,
+      ],
     }).compileComponents();
+
+    const transloco = TestBed.inject(TranslocoService);
+    transloco.setTranslation(en, 'en');
+    transloco.setActiveLang('en');
+    TestBed.inject(LanguageService).init();
   });
 
   it('should create the app', () => {
@@ -18,6 +59,7 @@ describe('App', () => {
 
   it('should render app shell title', async () => {
     const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Expense Tracker');

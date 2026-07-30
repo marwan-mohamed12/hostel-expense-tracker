@@ -11,6 +11,7 @@ export async function confirmDelete(options: {
   text?: string;
   html?: string;
   confirmButtonText?: string;
+  cancelButtonText?: string;
 }): Promise<boolean> {
   const result = await Swal.fire({
     title: options.title,
@@ -21,7 +22,7 @@ export async function confirmDelete(options: {
     focusCancel: true,
     reverseButtons: true,
     confirmButtonText: options.confirmButtonText ?? 'Yes, delete',
-    cancelButtonText: 'Cancel',
+    cancelButtonText: options.cancelButtonText ?? 'Cancel',
     confirmButtonColor: '#e11d48',
     cancelButtonColor: '#64748b',
     customClass: deleteDialogClasses,

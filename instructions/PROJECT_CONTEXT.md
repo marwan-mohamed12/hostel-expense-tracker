@@ -90,6 +90,7 @@ Every expense record must include:
 | Rendering | **SPA only (no SSR)** | SSR was removed intentionally |
 | Persistence | **localStorage** | Client-side for v1; no backend yet |
 | State | **HostelStore** service + Angular signals | Single source of truth in the app |
+| i18n | **@jsverse/transloco** (runtime) | EN + AR; runtime language switch; RTL for Arabic |
 | Tests | Vitest (`ng test`) | |
 | Package manager | npm | |
 
@@ -98,10 +99,31 @@ Every expense record must include:
 - Global CSS imported in `src/styles.css` via `@import 'sweetalert2/dist/sweetalert2.min.css'`.
 - Allowed as CommonJS in `angular.json` → `allowedCommonJsDependencies: ["sweetalert2"]`.
 - Shared helpers: `src/app/core/utils/swal-dialog.ts`
-  - `confirmDelete({ title, text?, html?, confirmButtonText? })` → `Promise<boolean>`
+  - `confirmDelete({ title, text?, html?, confirmButtonText?, cancelButtonText? })` → `Promise<boolean>`
   - `showSuccessToast(title, text?)` → brief success popup
 - **Used for all destructive confirms:** delete month (Payments), remove resident (Residents), delete expense (Expenses).
+- Dialog copy is translated via Transloco at call sites (pass already-translated strings).
 - Do **not** use native `alert` / `confirm` / `prompt` in the app.
+
+### Localization (i18n) notes
+- Library: **`@jsverse/transloco`** (runtime dictionaries, not Angular compile-time `@angular/localize`).
+- Translation files: `public/i18n/en.json`, `public/i18n/ar.json` (served as `/i18n/*.json`).
+- Loader: `src/app/core/i18n/transloco-loader.ts` (HttpClient → `./i18n/{lang}.json`).
+- Language service: `src/app/core/i18n/language.service.ts`
+  - Preference key: `hostel-expense-tracker-lang` in `localStorage`
+  - Default: stored preference → browser `ar` → else `en`
+  - Sets `document.documentElement.lang` / `dir` (`rtl` for Arabic, `ltr` for English)
+  - Updates `document.title` from `app.documentTitle`
+  - Helpers: `formatMonthLabel` / `formatMonthId` / `categoryLabel`
+- Providers in `app.config.ts`: `provideHttpClient()`, `provideTransloco(...)`, app initializer loads active lang before first paint.
+- UI strings use `TranslocoPipe` (`{{ 'key' | transloco }}`); TS strings use `TranslocoService.translate(...)`.
+- **Do not translate user data** (resident names, expense titles/descriptions, payment notes, added-by free text).
+- **Stored English keys stay English** in localStorage:
+  - Expense categories: stored as English (`Electricity`, …); display via `categories.*` keys.
+  - Month records keep English `label` for storage compatibility; **UI always formats labels** from `year`/`month` or `monthId` via `LanguageService`.
+- Language toggle sits at the **end of the navbar** (after desktop nav links; before mobile burger). Label is short: **`ع`** when UI is English (switch to Arabic), **`EN`** when UI is Arabic (switch to English).
+- Arabic copy uses **Egyptian dialect** (`public/i18n/ar.json`), not formal MSA.
+- Prefer logical CSS where possible (`ms-*`, `text-start`, `text-end`) for RTL.
 
 ### Why SPA (no SSR)
 - App uses **localStorage** heavily.
@@ -148,15 +170,18 @@ On some Windows PowerShell setups, use `npm.cmd` instead of `npm` if script exec
 
 ```text
 src/app/
-  app.ts                 # App shell + nav
+  app.ts                 # App shell + nav + language toggle
   app.html
   app.css
-  app.config.ts          # SPA providers (no hydration/SSR)
+  app.config.ts          # SPA providers + Transloco + HttpClient
   app.routes.ts          # Routes
   app.spec.ts
   core/
     constants/
       app.constants.ts   # STORAGE_KEY, DEFAULT_MONTHLY_FEE, categories, month names
+    i18n/
+      language.service.ts    # Active lang, RTL, month/category labels
+      transloco-loader.ts    # Loads public/i18n/{lang}.json
     services/
       storage.service.ts # localStorage load/save
       hostel.store.ts    # Domain operations + signals
@@ -172,6 +197,10 @@ src/app/
     residents/           # Resident CRUD + active/inactive
     payments/            # Monthly payment tracking
     expenses/            # Expense management
+public/
+  i18n/
+    en.json              # English UI strings
+    ar.json              # Arabic UI strings
 ```
 
 ### Routes
@@ -258,6 +287,12 @@ Treat these as **done** unless asked to change them:
    - SSR removed; client-only SPA
    - Tailwind styling for shell + pages
 
+6. **Localization (EN + AR)**
+   - Runtime i18n via Transloco; header language toggle
+   - Full UI translation: shell, all pages, filters, form labels/placeholders, empty states, SweetAlert confirms/toasts
+   - Arabic RTL (`dir="rtl"`) when AR is active
+   - Localized month names and expense category display labels
+
 ---
 
 ## 8. Working conventions for agents
@@ -292,7 +327,8 @@ These are optional next steps, not commitments:
 - Edit payment history validation rules
 - Further mobile polish / offline PWA
 - Backend + multi-device sync + auth (only if needed later)
-- Arabic UI / i18n
+- Additional locales beyond EN/AR
+- Locale-aware number/date formatting (`ar-EG` digits/calendars) if requested
 
 ---
 
@@ -315,6 +351,7 @@ These are optional next steps, not commitments:
 12. **Inactive residents excluded from paid/unpaid tracking:** dashboard paid/unpaid counts, unpaid list, and payments page rows/summary only include active residents. All-time collected/balance still includes historical paid amounts.
 13. **Dashboard header polish:** replaced muted “July 2026 · N active residents” subtitle with visible badges (solid teal month chip + soft teal active-residents chip) under the Dashboard title.
 14. **Unpaid expenses:** expenses have a `paid` flag. Unpaid expenses are tracked but **do not** subtract from balance left. Form checkbox + mark paid/unpaid actions; storage migrates missing `paid` → `true`.
+15. **i18n (Transloco):** English + Arabic runtime localization for the entire UI; language preference in localStorage; RTL for Arabic; month/category labels localized at display time.
 
 ---
 
@@ -334,6 +371,9 @@ These are optional next steps, not commitments:
 - `src/app/core/services/hostel.store.ts` — all domain logic
 - `src/app/core/constants/app.constants.ts` — defaults/categories/storage key
 - `src/app/core/utils/swal-dialog.ts` — shared SweetAlert2 confirm/success helpers
+- `src/app/core/i18n/language.service.ts` — language preference, RTL, month/category formatting
+- `src/app/core/i18n/transloco-loader.ts` — translation file loader
+- `public/i18n/en.json`, `public/i18n/ar.json` — UI translation dictionaries
 - `src/app/models/*` — data shapes
 - `src/app/app.routes.ts` — navigation
 - `src/app/pages/dashboard/*`
@@ -345,4 +385,4 @@ These are optional next steps, not commitments:
 
 ---
 
-*Last updated: unpaid expenses (`paid` flag) do not reduce balance; dashboard shows paid vs unpaid expense totals; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: full EN/AR runtime i18n via Transloco + RTL; unpaid expenses (`paid` flag) do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*

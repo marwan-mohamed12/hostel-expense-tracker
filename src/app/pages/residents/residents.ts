@@ -1,6 +1,7 @@
-﻿import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DEFAULT_MONTHLY_FEE } from '../../core/constants/app.constants';
 import { HostelStore } from '../../core/services/hostel.store';
 import { confirmDelete, showSuccessToast } from '../../core/utils/swal-dialog';
@@ -8,17 +9,24 @@ import { Resident } from '../../models/resident.model';
 
 @Component({
   selector: 'app-residents',
-  imports: [ReactiveFormsModule, CurrencyPipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, TranslocoPipe],
   templateUrl: './residents.html',
 })
 export class ResidentsPage {
   private readonly store = inject(HostelStore);
   private readonly fb = inject(FormBuilder);
+  private readonly transloco = inject(TranslocoService);
 
   readonly residents = this.store.residents;
   readonly filter = signal<'all' | 'active' | 'inactive'>('all');
   readonly editingId = signal<string | null>(null);
   readonly showForm = signal(false);
+
+  readonly filterOptions = [
+    { id: 'all' as const, labelKey: 'common.all' },
+    { id: 'active' as const, labelKey: 'common.active' },
+    { id: 'inactive' as const, labelKey: 'common.inactive' },
+  ];
 
   readonly filteredResidents = computed(() => {
     const list = [...this.residents()].sort((a, b) => a.name.localeCompare(b.name));
@@ -104,9 +112,10 @@ export class ResidentsPage {
 
   async remove(resident: Resident): Promise<void> {
     const confirmed = await confirmDelete({
-      title: `Remove ${resident.name}?`,
-      text: 'Their payment history for this resident will also be removed.',
-      confirmButtonText: 'Yes, remove resident',
+      title: this.transloco.translate('residents.removeTitle', { name: resident.name }),
+      text: this.transloco.translate('residents.removeText'),
+      confirmButtonText: this.transloco.translate('residents.removeConfirm'),
+      cancelButtonText: this.transloco.translate('common.cancel'),
     });
 
     if (!confirmed) {
@@ -118,6 +127,9 @@ export class ResidentsPage {
       this.cancelForm();
     }
 
-    await showSuccessToast('Resident removed', `${resident.name} was deleted.`);
+    await showSuccessToast(
+      this.transloco.translate('residents.removedTitle'),
+      this.transloco.translate('residents.removedText', { name: resident.name }),
+    );
   }
 }

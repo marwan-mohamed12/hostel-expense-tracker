@@ -1,17 +1,31 @@
-﻿import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LanguageService } from '../../core/i18n/language.service';
 import { HostelStore } from '../../core/services/hostel.store';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CurrencyPipe, DatePipe, RouterLink],
+  imports: [CurrencyPipe, DatePipe, RouterLink, TranslocoPipe],
   templateUrl: './dashboard.html',
 })
 export class DashboardPage {
   private readonly store = inject(HostelStore);
+  private readonly language = inject(LanguageService);
+  private readonly transloco = inject(TranslocoService);
 
-  readonly stats = computed(() => this.store.getDashboardStats());
+  readonly stats = computed(() => {
+    // Recompute labels when language changes.
+    this.language.lang();
+    this.transloco.getActiveLang();
+    const base = this.store.getDashboardStats();
+    return {
+      ...base,
+      monthLabel: this.language.formatMonthId(base.monthId),
+    };
+  });
+
   readonly months = this.store.monthsNewestFirst;
   readonly recentExpenses = computed(() => this.store.expensesNewestFirst().slice(0, 5));
   readonly unpaidPayments = computed(() => {
@@ -25,4 +39,5 @@ export class DashboardPage {
         residentName: this.store.getResidentName(payment.residentId),
       }));
   });
-}
+
+  }
