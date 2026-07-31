@@ -29,11 +29,6 @@ export class PaymentsPage {
   readonly monthPickerOpen = signal(false);
   readonly calendarYear = signal(Number(this.selectedMonthId().slice(0, 4)));
 
-  /** Optional panel for opening a past month to enter old data. */
-  readonly showManualCreate = signal(false);
-  readonly newYear = signal(new Date().getFullYear());
-  readonly newMonth = signal(new Date().getMonth() + 1);
-
   readonly selectedMonth = computed(() => {
     this.language.lang();
     const id = this.selectedMonthId();
@@ -164,23 +159,6 @@ export class PaymentsPage {
 
   closeMonthPicker(): void {
     this.monthPickerOpen.set(false);
-  }
-
-  toggleManualCreate(): void {
-    this.showManualCreate.update((v) => !v);
-  }
-
-  /** Explicitly open a past (or any) month for entering old data. */
-  createMonth(): void {
-    const record = this.store.createMonth(this.newYear(), this.newMonth());
-    this.selectedMonthId.set(record.id);
-    this.calendarYear.set(record.year);
-    this.showManualCreate.set(false);
-    this.toast.success(
-      this.transloco.translate('payments.monthOpenedToast', {
-        month: this.language.formatMonthLabel(record.year, record.month),
-      }),
-    );
   }
 
   async deleteMonth(): Promise<void> {

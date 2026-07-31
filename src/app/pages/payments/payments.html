@@ -132,14 +132,6 @@
         }
       </div>
 
-      <button type="button" (click)="toggleManualCreate()" class="ui-btn-secondary">
-        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path
-            d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"
-          />
-        </svg>
-        {{ 'payments.openPastMonth' | transloco }}
-      </button>
     </div>
   </div>
 
@@ -150,51 +142,6 @@
       [attr.aria-label]="'common.cancel' | transloco"
       (click)="closeMonthPicker()"
     ></button>
-  }
-
-  <!-- Optional: open a past month for old data -->
-  @if (showManualCreate()) {
-    <article class="ui-card p-5">
-      <div class="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <h2 class="text-sm font-semibold text-slate-900 dark:text-white">
-            {{ 'payments.createMonth' | transloco }}
-          </h2>
-          <p class="mt-0.5 text-xs text-slate-500 dark:text-zinc-500">
-            {{ 'payments.createMonthHint' | transloco }}
-          </p>
-        </div>
-        <button type="button" (click)="toggleManualCreate()" class="ui-btn-ghost ui-btn-sm">
-          {{ 'common.cancel' | transloco }}
-        </button>
-      </div>
-      <div class="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-        <label class="block">
-          <span class="ui-label">{{ 'common.year' | transloco }}</span>
-          <input
-            type="number"
-            class="ui-input"
-            [ngModel]="newYear()"
-            (ngModelChange)="newYear.set($event)"
-          />
-        </label>
-        <label class="block">
-          <span class="ui-label">{{ 'common.month' | transloco }}</span>
-          <select
-            class="ui-input"
-            [ngModel]="newMonth()"
-            (ngModelChange)="newMonth.set(+$event)"
-          >
-            @for (num of monthNumbers; track num) {
-              <option [ngValue]="num">{{ ('months.' + num) | transloco }}</option>
-            }
-          </select>
-        </label>
-        <button type="button" (click)="createMonth()" class="ui-btn-primary w-full sm:w-auto">
-          {{ 'payments.createOpenMonth' | transloco }}
-        </button>
-      </div>
-    </article>
   }
 
   <!-- Collection progress -->
