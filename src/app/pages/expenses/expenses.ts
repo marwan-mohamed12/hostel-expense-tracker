@@ -166,6 +166,19 @@ export class ExpensesPage {
     this.draftStatus.set('all');
   }
 
+  /** Desktop inline selects apply immediately. */
+  setCategoryFilter(value: ExpenseCategoryFilter): void {
+    this.categoryFilter.set(value);
+  }
+
+  setMonthFilter(value: ExpenseMonthFilter): void {
+    this.monthFilter.set(value);
+  }
+
+  setStatusFilter(value: ExpenseStatusFilter): void {
+    this.statusFilter.set(value);
+  }
+
   removeCategoryFilter(): void {
     this.categoryFilter.set('all');
   }

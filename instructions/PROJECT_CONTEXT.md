@@ -313,7 +313,7 @@ Treat these as **done** unless asked to change them:
    - Edit / delete (SweetAlert2 confirm)
    - Quick **Mark paid** / **Mark unpaid** on list rows
    - **Categories:** presets + **add custom** (+ button on expense form); stored in `customCategories`
-   - **Expense history filters:** filter icon opens a dialog (category / month / status) → Apply; active filters as removable chips
+   - **Expense history filters:** desktop shows an inline filter bar above the list; mobile uses filter icon → dialog → Apply, with removable chips
    - Filtered paid/unpaid sums in header
    - Only **paid** amounts reduce balance; unpaid totals shown separately
 

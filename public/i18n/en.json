@@ -220,6 +220,7 @@
     "openFilters": "Open expense filters",
     "filterDialogTitle": "Filter expenses",
     "filterDialogHint": "Choose category, month, and status, then apply.",
+    "filterBarHint": "Narrow the list by category, month, or payment status.",
     "applyFilters": "Apply filters",
     "clearFilters": "Clear filters",
     "allMonths": "All months",

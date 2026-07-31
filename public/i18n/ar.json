@@ -220,6 +220,7 @@
     "openFilters": "افتح فلاتر المصاريف",
     "filterDialogTitle": "تصفية المصاريف",
     "filterDialogHint": "اختار النوع والشهر والحالة وبعدين طبّق.",
+    "filterBarHint": "ضيّق القائمة حسب النوع أو الشهر أو حالة الدفع.",
     "applyFilters": "طبّق الفلاتر",
     "clearFilters": "امسح الفلاتر",
     "allMonths": "كل الشهور",

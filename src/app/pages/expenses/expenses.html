@@ -196,8 +196,89 @@
     </form>
   }
 
-  <!-- Compact filter bar -->
-  <div class="flex flex-wrap items-center gap-2">
+  <!-- Desktop: inline filters above the list -->
+  <article class="ui-card hidden p-4 md:block sm:p-5">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span
+          class="flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300"
+          aria-hidden="true"
+        >
+          <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fill-rule="evenodd"
+              d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 0 1 .628.74v2.288a2.25 2.25 0 0 1-.659 1.59l-4.682 4.683a2.25 2.25 0 0 0-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 0 1 8 18.25v-5.757a2.25 2.25 0 0 0-.659-1.591L2.659 6.22A2.25 2.25 0 0 1 2 4.629V2.34a.75.75 0 0 1 .628-.74Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </span>
+        <div>
+          <h2 class="text-sm font-semibold text-slate-900 dark:text-white">
+            {{ 'expenses.filterDialogTitle' | transloco }}
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-zinc-500">
+            {{ 'expenses.filterBarHint' | transloco }}
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <p class="text-xs font-medium tabular-nums text-slate-500 dark:text-zinc-500">
+          {{ 'expenses.showingCount' | transloco: { count: filteredExpenses().length } }}
+        </p>
+        @if (hasActiveFilters()) {
+          <button type="button" (click)="clearFilters()" class="ui-btn-ghost ui-btn-sm">
+            {{ 'expenses.clearFilters' | transloco }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="mt-4 grid gap-3 sm:grid-cols-3">
+      <label class="block">
+        <span class="ui-label">{{ 'common.category' | transloco }}</span>
+        <select
+          class="ui-input"
+          [value]="categoryFilter()"
+          (change)="setCategoryFilter($any($event.target).value)"
+        >
+          <option value="all">{{ 'common.all' | transloco }}</option>
+          @for (category of categories(); track category) {
+            <option [value]="category">{{ categoryLabel(category) }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="ui-label">{{ 'common.month' | transloco }}</span>
+        <select
+          class="ui-input"
+          [value]="monthFilter()"
+          (change)="setMonthFilter($any($event.target).value)"
+        >
+          <option value="all">{{ 'expenses.allMonths' | transloco }}</option>
+          @for (month of monthOptions(); track month.id) {
+            <option [value]="month.id">{{ month.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="ui-label">{{ 'common.status' | transloco }}</span>
+        <select
+          class="ui-input"
+          [value]="statusFilter()"
+          (change)="setStatusFilter($any($event.target).value)"
+        >
+          @for (option of statusOptions; track option.id) {
+            <option [value]="option.id">{{ option.labelKey | transloco }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </article>
+
+  <!-- Mobile: filter button + active chips -->
+  <div class="flex flex-wrap items-center gap-2 md:hidden">
     <button
       type="button"
       (click)="openFilter()"
@@ -273,10 +354,10 @@
     </p>
   </div>
 
-  <!-- Filter dialog -->
+  <!-- Mobile filter dialog -->
   @if (filterOpen()) {
     <div
-      class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-[2px] sm:items-center sm:p-4 dark:bg-black/60"
+      class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-[2px] sm:items-center sm:p-4 md:hidden dark:bg-black/60"
       role="dialog"
       aria-modal="true"
       [attr.aria-label]="'expenses.filterDialogTitle' | transloco"
