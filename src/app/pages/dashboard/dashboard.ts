@@ -97,8 +97,12 @@ export class DashboardPage {
     });
   });
 
+  /**
+   * Browse a month from the calendar without creating an empty shell.
+   * Current / already-open months stay available; unused browsed months are pruned.
+   */
   selectMonth(monthId: string): void {
-    this.store.ensureMonth(monthId);
+    this.store.prepareMonthView(monthId);
     this.selectedMonthId.set(monthId);
     this.calendarYear.set(Number(monthId.slice(0, 4)));
     this.monthPickerOpen.set(false);

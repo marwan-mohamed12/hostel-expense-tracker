@@ -111,12 +111,30 @@ export class PaymentsPage {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
-  /** Open / select a month — creates it automatically if needed. */
+  /** Whether the selected month has a persisted tracking shell. */
+  readonly monthIsOpen = computed(() => this.store.hasMonth(this.selectedMonthId()));
+
+  /**
+   * Browse a month from the calendar without creating it.
+   * Already-open months (and the current calendar month) stay available.
+   */
   selectMonth(monthId: string): void {
-    this.store.ensureMonth(monthId);
+    this.store.prepareMonthView(monthId);
     this.selectedMonthId.set(monthId);
     this.calendarYear.set(Number(monthId.slice(0, 4)));
     this.monthPickerOpen.set(false);
+  }
+
+  /** Explicitly open tracking for a past/unopened month (seeds payment rows). */
+  startTracking(): void {
+    const id = this.selectedMonthId();
+    const record = this.store.startTrackingMonth(id);
+    this.selectedMonthId.set(record.id);
+    this.toast.success(
+      this.transloco.translate('payments.monthOpenedToast', {
+        month: this.language.formatMonthLabel(record.year, record.month),
+      }),
+    );
   }
 
   pickCalendarMonth(month: number): void {

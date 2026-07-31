@@ -208,17 +208,28 @@
       <h2 class="font-semibold text-slate-900 dark:text-white">
         {{ 'payments.monthPayments' | transloco: { month: selectedMonth().label } }}
       </h2>
-      <button
-        type="button"
-        (click)="deleteMonth()"
-        class="ui-btn-danger ui-btn-sm"
-        [attr.title]="'payments.deleteMonthTitle' | transloco"
-      >
-        {{ 'payments.deleteMonth' | transloco }}
-      </button>
+      @if (monthIsOpen()) {
+        <button
+          type="button"
+          (click)="deleteMonth()"
+          class="ui-btn-danger ui-btn-sm"
+          [attr.title]="'payments.deleteMonthTitle' | transloco"
+        >
+          {{ 'payments.deleteMonth' | transloco }}
+        </button>
+      }
     </div>
 
-    @if (rows().length === 0) {
+    @if (!monthIsOpen()) {
+      <div class="ui-empty m-4 border-0 bg-slate-50/80 py-10 shadow-none dark:bg-[#0a0c10]">
+        <p class="max-w-sm text-sm text-slate-600 dark:text-zinc-500">
+          {{ 'payments.notOpened' | transloco }}
+        </p>
+        <button type="button" (click)="startTracking()" class="ui-btn-primary mt-4">
+          {{ 'payments.startTracking' | transloco }}
+        </button>
+      </div>
+    } @else if (rows().length === 0) {
       <div class="ui-empty m-4 border-0 bg-slate-50/80 py-10 shadow-none dark:bg-[#0a0c10]">
         <p class="text-sm text-slate-600 dark:text-zinc-500">{{ 'payments.empty' | transloco }}</p>
       </div>
