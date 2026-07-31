@@ -3,10 +3,15 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { EXPENSE_CATEGORIES } from '../../core/constants/app.constants';
+import { LanguageService } from '../../core/i18n/language.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { ToastService } from '../../core/services/toast.service';
 import { confirmDelete } from '../../core/utils/swal-dialog';
 import { Expense } from '../../models/expense.model';
+
+export type ExpenseStatusFilter = 'all' | 'paid' | 'unpaid';
+export type ExpenseCategoryFilter = 'all' | string;
+export type ExpenseMonthFilter = 'all' | string;
 
 @Component({
   selector: 'app-expenses',
@@ -18,28 +23,99 @@ export class ExpensesPage {
   private readonly fb = inject(FormBuilder);
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
+  readonly language = inject(LanguageService);
 
-  readonly categories = EXPENSE_CATEGORIES;
+  readonly categories = this.store.allCategories;
   readonly expenses = this.store.expensesNewestFirst;
   readonly editingId = signal<string | null>(null);
   readonly showForm = signal(false);
 
+  /** Applied filters (list). */
+  readonly categoryFilter = signal<ExpenseCategoryFilter>('all');
+  readonly monthFilter = signal<ExpenseMonthFilter>('all');
+  readonly statusFilter = signal<ExpenseStatusFilter>('all');
+
+  /** Filter dialog open + drafts (committed only on Apply). */
+  readonly filterOpen = signal(false);
+  readonly draftCategory = signal<ExpenseCategoryFilter>('all');
+  readonly draftMonth = signal<ExpenseMonthFilter>('all');
+  readonly draftStatus = signal<ExpenseStatusFilter>('all');
+
+  /** Inline “add category” while composing an expense. */
+  readonly showNewCategory = signal(false);
+  readonly newCategoryName = signal('');
+
+  readonly statusOptions = [
+    { id: 'all' as const, labelKey: 'common.all' },
+    { id: 'paid' as const, labelKey: 'common.paid' },
+    { id: 'unpaid' as const, labelKey: 'common.unpaid' },
+  ];
+
+  readonly monthOptions = computed(() => {
+    this.language.lang();
+    const fromExpenses = this.store.expenseMonthIds();
+    const fromMonths = this.store.monthsNewestFirst().map((m) => m.id);
+    const ids = [...new Set([...fromExpenses, ...fromMonths])].sort((a, b) =>
+      b.localeCompare(a),
+    );
+    return ids.map((id) => ({
+      id,
+      label: this.language.formatMonthId(id),
+    }));
+  });
+
+  readonly filteredExpenses = computed(() => {
+    const category = this.categoryFilter();
+    const month = this.monthFilter();
+    const status = this.statusFilter();
+
+    return this.expenses().filter((expense) => {
+      if (category !== 'all' && expense.category !== category) {
+        return false;
+      }
+      if (month !== 'all' && !expense.date.startsWith(month)) {
+        return false;
+      }
+      if (status === 'paid' && !expense.paid) {
+        return false;
+      }
+      if (status === 'unpaid' && expense.paid) {
+        return false;
+      }
+      return true;
+    });
+  });
+
   readonly paidTotal = computed(() =>
-    this.expenses()
+    this.filteredExpenses()
       .filter((expense) => expense.paid)
       .reduce((sum, expense) => sum + expense.amount, 0),
   );
 
   readonly unpaidTotal = computed(() =>
-    this.expenses()
+    this.filteredExpenses()
       .filter((expense) => !expense.paid)
       .reduce((sum, expense) => sum + expense.amount, 0),
   );
 
+  readonly hasActiveFilters = computed(
+    () =>
+      this.categoryFilter() !== 'all' ||
+      this.monthFilter() !== 'all' ||
+      this.statusFilter() !== 'all',
+  );
+
+  readonly activeFilterCount = computed(() => {
+    let n = 0;
+    if (this.categoryFilter() !== 'all') n++;
+    if (this.monthFilter() !== 'all') n++;
+    if (this.statusFilter() !== 'all') n++;
+    return n;
+  });
+
   readonly form = this.fb.group({
     title: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
-    category: this.fb.nonNullable.control(EXPENSE_CATEGORIES[0] as string, Validators.required),
-    // null (empty) by default — 0 fails min(0.01) and previously blocked save with no feedback
+    category: this.fb.nonNullable.control<string>(EXPENSE_CATEGORIES[0], Validators.required),
     amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
     date: this.fb.nonNullable.control(new Date().toISOString().slice(0, 10), Validators.required),
     description: this.fb.nonNullable.control(''),
@@ -47,14 +123,102 @@ export class ExpensesPage {
     paid: this.fb.nonNullable.control(true),
   });
 
-  /** True when a control is invalid and the user has interacted with it (or submit was attempted). */
   fieldInvalid(name: 'title' | 'category' | 'amount' | 'date' | 'addedBy'): boolean {
     const control = this.form.controls[name];
     return control.invalid && (control.touched || control.dirty);
   }
 
+  categoryLabel(category: string): string {
+    this.language.lang();
+    return this.language.categoryLabel(category);
+  }
+
+  openFilter(): void {
+    this.draftCategory.set(this.categoryFilter());
+    this.draftMonth.set(this.monthFilter());
+    this.draftStatus.set(this.statusFilter());
+    this.filterOpen.set(true);
+  }
+
+  closeFilter(): void {
+    this.filterOpen.set(false);
+  }
+
+  applyFilter(): void {
+    this.categoryFilter.set(this.draftCategory());
+    this.monthFilter.set(this.draftMonth());
+    this.statusFilter.set(this.draftStatus());
+    this.filterOpen.set(false);
+  }
+
+  clearFiltersInDialog(): void {
+    this.draftCategory.set('all');
+    this.draftMonth.set('all');
+    this.draftStatus.set('all');
+  }
+
+  clearFilters(): void {
+    this.categoryFilter.set('all');
+    this.monthFilter.set('all');
+    this.statusFilter.set('all');
+    this.draftCategory.set('all');
+    this.draftMonth.set('all');
+    this.draftStatus.set('all');
+  }
+
+  /** Desktop inline selects apply immediately. */
+  setCategoryFilter(value: ExpenseCategoryFilter): void {
+    this.categoryFilter.set(value);
+  }
+
+  setMonthFilter(value: ExpenseMonthFilter): void {
+    this.monthFilter.set(value);
+  }
+
+  setStatusFilter(value: ExpenseStatusFilter): void {
+    this.statusFilter.set(value);
+  }
+
+  removeCategoryFilter(): void {
+    this.categoryFilter.set('all');
+  }
+
+  removeMonthFilter(): void {
+    this.monthFilter.set('all');
+  }
+
+  removeStatusFilter(): void {
+    this.statusFilter.set('all');
+  }
+
+  toggleNewCategory(): void {
+    this.showNewCategory.update((v) => !v);
+    if (!this.showNewCategory()) {
+      this.newCategoryName.set('');
+    }
+  }
+
+  addNewCategory(): void {
+    const name = this.newCategoryName().trim();
+    if (name.length < 2) {
+      this.toast.error(this.transloco.translate('expenses.categoryNameError'));
+      return;
+    }
+    const created = this.store.addCategory(name);
+    this.form.controls.category.setValue(created);
+    this.newCategoryName.set('');
+    this.showNewCategory.set(false);
+    this.toast.success(
+      this.transloco.translate('expenses.categoryAddedToast', {
+        name: this.categoryLabel(created),
+      }),
+    );
+  }
+
   openCreate(): void {
     this.editingId.set(null);
+    this.showNewCategory.set(false);
+    this.newCategoryName.set('');
     this.form.reset({
       title: '',
       category: EXPENSE_CATEGORIES[0],
@@ -69,6 +233,10 @@ export class ExpensesPage {
 
   openEdit(expense: Expense): void {
     this.editingId.set(expense.id);
+    this.showNewCategory.set(false);
+    this.newCategoryName.set('');
+    // Ensure category is in the picker list (e.g. custom from older data).
+    this.store.addCategory(expense.category);
     this.form.setValue({
       title: expense.title,
       category: expense.category,
@@ -84,6 +252,8 @@ export class ExpensesPage {
   cancelForm(): void {
     this.showForm.set(false);
     this.editingId.set(null);
+    this.showNewCategory.set(false);
+    this.newCategoryName.set('');
   }
 
   save(): void {

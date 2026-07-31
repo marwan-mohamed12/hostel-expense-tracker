@@ -1,16 +1,19 @@
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DEFAULT_MONTHLY_FEE } from '../../core/constants/app.constants';
+import { LanguageService } from '../../core/i18n/language.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { ToastService } from '../../core/services/toast.service';
 import { confirmDelete } from '../../core/utils/swal-dialog';
 import { Resident } from '../../models/resident.model';
 
+export type HistoryMonthFilter = 'all' | string;
+
 @Component({
   selector: 'app-residents',
-  imports: [ReactiveFormsModule, CurrencyPipe, TranslocoPipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, TranslocoPipe],
   templateUrl: './residents.html',
 })
 export class ResidentsPage {
@@ -18,11 +21,15 @@ export class ResidentsPage {
   private readonly fb = inject(FormBuilder);
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
+  readonly language = inject(LanguageService);
 
   readonly residents = this.store.residents;
   readonly filter = signal<'all' | 'active' | 'inactive'>('all');
   readonly editingId = signal<string | null>(null);
   readonly showForm = signal(false);
+  readonly historyResidentId = signal<string | null>(null);
+  /** Payment history: all months or a specific YYYY-MM. */
+  readonly historyMonthFilter = signal<HistoryMonthFilter>('all');
 
   readonly filterOptions = [
     { id: 'all' as const, labelKey: 'common.all' },
@@ -40,6 +47,66 @@ export class ResidentsPage {
       return list.filter((resident) => !resident.active);
     }
     return list;
+  });
+
+  readonly historyResident = computed(() => {
+    const id = this.historyResidentId();
+    if (!id) {
+      return null;
+    }
+    return this.residents().find((r) => r.id === id) ?? null;
+  });
+
+  /** All payment rows for the open resident (unfiltered). */
+  readonly allPaymentHistory = computed(() => {
+    const id = this.historyResidentId();
+    if (!id) {
+      return [];
+    }
+    this.language.lang();
+    return this.store.getPaymentsForResident(id).map((payment) => ({
+      ...payment,
+      monthLabel: this.language.formatMonthId(payment.monthId),
+    }));
+  });
+
+  /** Months available for this resident’s history (newest first). */
+  readonly historyMonthOptions = computed(() => {
+    this.language.lang();
+    const seen = new Set<string>();
+    const options: { id: string; label: string }[] = [];
+    for (const row of this.allPaymentHistory()) {
+      if (seen.has(row.monthId)) {
+        continue;
+      }
+      seen.add(row.monthId);
+      options.push({
+        id: row.monthId,
+        label: this.language.formatMonthId(row.monthId),
+      });
+    }
+    return options;
+  });
+
+  readonly paymentHistory = computed(() => {
+    const month = this.historyMonthFilter();
+    const rows = this.allPaymentHistory();
+    if (month === 'all') {
+      return rows;
+    }
+    return rows.filter((row) => row.monthId === month);
+  });
+
+  readonly paymentHistorySummary = computed(() => {
+    const rows = this.paymentHistory();
+    const paid = rows.filter((r) => r.paid);
+    const unpaid = rows.filter((r) => !r.paid);
+    return {
+      totalMonths: rows.length,
+      paidCount: paid.length,
+      unpaidCount: unpaid.length,
+      totalPaid: paid.reduce((sum, r) => sum + r.amount, 0),
+    };
   });
 
   readonly form = this.fb.nonNullable.group({
@@ -80,6 +147,20 @@ export class ResidentsPage {
   cancelForm(): void {
     this.showForm.set(false);
     this.editingId.set(null);
+  }
+
+  openHistory(resident: Resident): void {
+    this.historyMonthFilter.set('all');
+    this.historyResidentId.set(resident.id);
+  }
+
+  closeHistory(): void {
+    this.historyResidentId.set(null);
+    this.historyMonthFilter.set('all');
+  }
+
+  setHistoryMonthFilter(value: HistoryMonthFilter): void {
+    this.historyMonthFilter.set(value);
   }
 
   save(): void {
@@ -140,6 +221,9 @@ export class ResidentsPage {
     this.store.removeResident(resident.id);
     if (this.editingId() === resident.id) {
       this.cancelForm();
+    }
+    if (this.historyResidentId() === resident.id) {
+      this.closeHistory();
     }
 
     this.toast.success(

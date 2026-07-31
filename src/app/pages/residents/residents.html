@@ -190,6 +190,9 @@
           </dl>
 
           <div class="mt-3 flex flex-wrap gap-2 border-t border-slate-100 dark:border-white/[0.06] pt-3">
+            <button type="button" (click)="openHistory(resident)" class="ui-btn-secondary ui-btn-sm">
+              {{ 'residents.paymentHistory' | transloco }}
+            </button>
             <button type="button" (click)="toggleActive(resident)" class="ui-btn-secondary ui-btn-sm">
               {{ (resident.active ? 'residents.deactivate' : 'residents.activate') | transloco }}
             </button>
@@ -252,6 +255,9 @@
                 </td>
                 <td class="px-4 py-3.5">
                   <div class="flex flex-wrap justify-end gap-2">
+                    <button type="button" (click)="openHistory(resident)" class="ui-btn-secondary ui-btn-sm">
+                      {{ 'residents.paymentHistory' | transloco }}
+                    </button>
                     <button type="button" (click)="toggleActive(resident)" class="ui-btn-secondary ui-btn-sm">
                       {{ (resident.active ? 'residents.deactivate' : 'residents.activate') | transloco }}
                     </button>
@@ -271,6 +277,161 @@
             }
           </tbody>
         </table>
+      </div>
+    </div>
+  }
+
+  <!-- Payment history panel -->
+  @if (historyResident(); as resident) {
+    <div
+      class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-[2px] sm:items-center sm:p-4 dark:bg-black/60"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="'residents.historyTitle' | transloco: { name: resident.name }"
+      (click)="closeHistory()"
+    >
+      <div
+        class="ui-card flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl sm:rounded-2xl"
+        (click)="$event.stopPropagation()"
+      >
+        <div
+          class="flex items-start justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-brand-50/80 to-white px-5 py-4 dark:border-white/[0.06] dark:from-brand-950/30 dark:to-[#0a0c10]"
+        >
+          <div class="flex min-w-0 items-center gap-3">
+            <span class="ui-avatar size-11 text-sm">{{ initials(resident.name) }}</span>
+            <div class="min-w-0">
+              <p class="text-xs font-bold uppercase tracking-[0.12em] text-brand-700 dark:text-brand-400">
+                {{ 'residents.paymentHistory' | transloco }}
+              </p>
+              <h2 class="truncate text-lg font-bold text-slate-900 dark:text-white">
+                {{ resident.name }}
+              </h2>
+              <p class="mt-0.5 text-xs text-slate-500 dark:text-zinc-500">
+                {{ resident.room || ('common.emDash' | transloco) }}
+                ·
+                {{ resident.monthlyFee | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+                / {{ 'common.month' | transloco }}
+              </p>
+            </div>
+          </div>
+          <button type="button" (click)="closeHistory()" class="ui-btn-ghost ui-btn-sm shrink-0" [attr.aria-label]="'common.cancel' | transloco">
+            <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path
+                d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Month scope: all months or one month -->
+        <div class="border-b border-slate-100 px-5 py-3 dark:border-white/[0.06]">
+          <label class="block">
+            <span class="ui-label">{{ 'residents.historyFilterMonth' | transloco }}</span>
+            <select
+              class="ui-input"
+              [value]="historyMonthFilter()"
+              (change)="setHistoryMonthFilter($any($event.target).value)"
+            >
+              <option value="all">{{ 'residents.historyAllMonths' | transloco }}</option>
+              @for (month of historyMonthOptions(); track month.id) {
+                <option [value]="month.id">{{ month.label }}</option>
+              }
+            </select>
+          </label>
+          <p class="mt-1.5 text-xs text-slate-500 dark:text-zinc-500">
+            {{ 'residents.historyFilterHint' | transloco }}
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 border-b border-slate-100 px-5 py-3 sm:grid-cols-4 dark:border-white/[0.06]">
+          <div class="rounded-xl bg-slate-50 px-3 py-2 dark:bg-[#12151c]">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+              {{ 'residents.historyMonths' | transloco }}
+            </p>
+            <p class="text-lg font-bold tabular-nums text-slate-900 dark:text-white">
+              {{ paymentHistorySummary().totalMonths }}
+            </p>
+          </div>
+          <div class="rounded-xl bg-emerald-50 px-3 py-2 dark:bg-emerald-950/40">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              {{ 'common.paid' | transloco }}
+            </p>
+            <p class="text-lg font-bold tabular-nums text-emerald-900 dark:text-emerald-200">
+              {{ paymentHistorySummary().paidCount }}
+            </p>
+          </div>
+          <div class="rounded-xl bg-amber-50 px-3 py-2 dark:bg-amber-950/40">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-400">
+              {{ 'common.unpaid' | transloco }}
+            </p>
+            <p class="text-lg font-bold tabular-nums text-amber-950 dark:text-amber-100">
+              {{ paymentHistorySummary().unpaidCount }}
+            </p>
+          </div>
+          <div class="rounded-xl bg-sky-50 px-3 py-2 dark:bg-sky-950/40">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-sky-800 dark:text-sky-400">
+              {{ 'residents.historyCollected' | transloco }}
+            </p>
+            <p class="text-sm font-bold tabular-nums text-sky-950 dark:text-sky-100 sm:text-base">
+              {{ paymentHistorySummary().totalPaid | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          @if (allPaymentHistory().length === 0) {
+            <div class="ui-empty py-10">
+              <p class="text-sm text-slate-600 dark:text-zinc-500">{{ 'residents.historyEmpty' | transloco }}</p>
+            </div>
+          } @else if (paymentHistory().length === 0) {
+            <div class="ui-empty py-10">
+              <p class="text-sm text-slate-600 dark:text-zinc-500">{{ 'residents.historyEmptyMonth' | transloco }}</p>
+              <button type="button" (click)="setHistoryMonthFilter('all')" class="ui-btn-secondary mt-3 ui-btn-sm">
+                {{ 'residents.historyAllMonths' | transloco }}
+              </button>
+            </div>
+          } @else {
+            <ul class="space-y-2">
+              @for (row of paymentHistory(); track row.id) {
+                <li
+                  class="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm dark:border-white/[0.06] dark:bg-[#0a0c10]"
+                >
+                  <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p class="font-semibold text-slate-900 dark:text-white">{{ row.monthLabel }}</p>
+                      <p class="mt-0.5 text-xs text-slate-500 dark:text-zinc-500">
+                        @if (row.paidAt) {
+                          {{ 'payments.paymentDate' | transloco }}: {{ row.paidAt | date: 'mediumDate' }}
+                        } @else {
+                          {{ 'common.emDash' | transloco }}
+                        }
+                      </p>
+                    </div>
+                    <div class="text-end">
+                      <p class="font-bold tabular-nums text-slate-900 dark:text-white">
+                        {{ row.amount | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+                      </p>
+                      @if (row.paid) {
+                        <span class="ui-badge ui-badge-success mt-1">{{ 'common.paid' | transloco }}</span>
+                      } @else {
+                        <span class="ui-badge ui-badge-warn mt-1">{{ 'common.unpaid' | transloco }}</span>
+                      }
+                    </div>
+                  </div>
+                  @if (row.notes) {
+                    <p class="mt-2 text-xs text-slate-600 dark:text-zinc-400">{{ row.notes }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="border-t border-slate-100 px-5 py-3 dark:border-white/[0.06]">
+          <button type="button" (click)="closeHistory()" class="ui-btn-secondary w-full sm:w-auto">
+            {{ 'common.cancel' | transloco }}
+          </button>
+        </div>
       </div>
     </div>
   }

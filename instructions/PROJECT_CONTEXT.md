@@ -44,7 +44,7 @@ This is a practical internal tool for a hostel, not a multi-tenant SaaS product 
 ### Expenses
 Every expense record must include:
 - **title**
-- **category** (e.g. Electricity, Water, Gas, Internet, Repairs, Cleaning, Supplies, Other)
+- **category** — built-in presets (Electricity, Water, Gas, Internet, Repairs, Cleaning, Supplies, Other) **plus user-defined categories** added while creating/editing an expense. Built-ins stored as English keys and shown via `categories.*` i18n; custom labels display as entered. Persisted in `AppData.customCategories`.
 - **amount**
 - **date**
 - **description**
@@ -282,7 +282,7 @@ public/
 - `createdAt`, `updatedAt`
 
 ### Expense
-- `id`, `title`, `category`, `amount`, `date`
+- `id`, `title`, `category` (`ExpenseCategory` preset), `amount`, `date`
 - `description`, `addedBy`
 - `paid` (boolean; unpaid does not reduce balance)
 - `createdAt`, `updatedAt`
@@ -300,8 +300,10 @@ Treat these as **done** unless asked to change them:
    - Per-resident monthly fee
 
 2. **Monthly payment tracking**
-   - Auto-create current month
-   - Manual create/open month
+   - **Auto-create current month** on app load (`ensureCurrentMonth`) only
+   - **Calendar browse** does **not** create a month shell; past months need **Start tracking** on Payments (or become kept only after real activity)
+   - **Prune empty months:** unused shells (no paid payments, no notes, no custom amounts, no expenses that month) are removed when switching months / on load — current calendar month is always kept
+   - **Calendar month navigator** (same pattern as dashboard): prev/next + year grid; open months marked with a dot
    - **Delete month** (removes the month + all its payment rows; expenses unchanged; SweetAlert2 confirm)
    - Seed payments for active residents
    - Mark paid / unpaid
@@ -312,17 +314,25 @@ Treat these as **done** unless asked to change them:
    - Record title, category, amount, date, description, added by, **paid/unpaid**
    - Edit / delete (SweetAlert2 confirm)
    - Quick **Mark paid** / **Mark unpaid** on list rows
-   - Category presets
+   - **Categories:** presets + **add custom** (+ button on expense form); stored in `customCategories`
+   - **Expense history filters:** desktop shows an inline filter bar above the list; mobile uses filter icon → dialog → Apply, with removable chips
+   - Filtered paid/unpaid sums in header
    - Only **paid** amounts reduce balance; unpaid totals shown separately
 
 4. **Dashboard (home)**
-   - Paid / not paid (month)
-   - Collected (month)
-   - Paid expenses (month) + unpaid note when applicable
+   - **Month navigator** — prev / label / next in the header; click label opens a **year + 12-month calendar grid** (pick any month); stats / unpaid list / recent expenses follow selection
+   - Paid / not paid (selected month)
+   - Collected (selected month)
+   - Paid expenses (selected month) + unpaid note when applicable
    - Current balance (all-time collected − all-time **paid** expenses) — **hero gradient card**
    - Month collection progress bar (% of active residents paid)
-   - Unpaid list (with initials avatars) + recent expenses + all-time totals
+   - Unpaid list (with initials avatars) + recent expenses (for selected month) + all-time totals
    - Header context chips: solid brand **month** badge + soft **active residents** badge
+
+4b. **Resident payment history**
+   - From Residents list: **History** opens a panel for that resident
+   - Filter: **All months** or a **specific month** (dropdown of months that have records)
+   - Shows payment rows (status, amount, paid date, notes) + summary counts/collected for the filter
 
 5. **Setup**
    - SSR removed; client-only SPA
@@ -368,9 +378,9 @@ Treat these as **done** unless asked to change them:
 These are optional next steps, not commitments:
 
 - Export / import JSON backup of localStorage data
-- Better statistics (charts by month/category)
+- Better statistics (charts by month/category) — Phase 2 lays filter foundations
 - Multi-month comparison reports
-- Filter/search on expenses and residents
+- Text search on expenses and residents
 - Edit payment history validation rules
 - Further mobile polish / offline PWA
 - Backend + multi-device sync + auth (only if needed later)
@@ -403,6 +413,7 @@ These are optional next steps, not commitments:
 17. **UI/UX redesign (soft ledger):** Plus Jakarta Sans, brand teal tokens, ambient canvas, glass sticky header with pill nav, dashboard balance hero + collection progress, payment progress bar, resident initials avatars, refined empty states with CTAs, shared `.ui-*` component classes for consistency.
 18. **Dark mode:** `ThemeService` (`light` | `dark` | `system`), preference key `hostel-expense-tracker-theme` in localStorage; FOUC-safe boot script in `index.html`; header icon cycles light → dark → system; Tailwind `@custom-variant dark` on `html.dark`; SweetAlert dark styles.
 19. **User journey:** guided product tour so new users understand features and workflow (residents → payments → expenses → dashboard); EN/AR; first-visit auto-open + header help + empty dashboard banner.
+20. **Phase 2 — organization & history:** expense categories (presets + custom); filter dialog on Expenses; dashboard compact month navigator; resident payment history panel on Residents.
 
 ---
 
@@ -440,4 +451,4 @@ These are optional next steps, not commitments:
 
 ---
 
-*Last updated: user journey / how-it-works guided tour; dark mode; UI/UX redesign; angular-toastify + SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: Phase 2 (structured expense categories, expense history filters, dashboard month switcher, resident payment history); user journey; dark mode; UI/UX redesign; angular-toastify + SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*

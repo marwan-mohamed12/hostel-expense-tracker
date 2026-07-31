@@ -1,7 +1,9 @@
 ﻿import { computed, Injectable, signal } from '@angular/core';
 import {
   DEFAULT_MONTHLY_FEE,
+  EXPENSE_CATEGORIES,
   MONTH_NAMES,
+  normalizeExpenseCategory,
 } from '../constants/app.constants';
 import { DashboardStats } from '../../models/app-data.model';
 import { Expense, ExpenseInput } from '../../models/expense.model';
@@ -37,11 +39,13 @@ export class HostelStore {
   private readonly monthsSignal = signal<MonthRecord[]>([]);
   private readonly paymentsSignal = signal<Payment[]>([]);
   private readonly expensesSignal = signal<Expense[]>([]);
+  private readonly customCategoriesSignal = signal<string[]>([]);
 
   readonly residents = this.residentsSignal.asReadonly();
   readonly months = this.monthsSignal.asReadonly();
   readonly payments = this.paymentsSignal.asReadonly();
   readonly expenses = this.expensesSignal.asReadonly();
+  readonly customCategories = this.customCategoriesSignal.asReadonly();
 
   readonly activeResidents = computed(() =>
     this.residentsSignal().filter((resident) => resident.active),
@@ -55,13 +59,61 @@ export class HostelStore {
     [...this.expensesSignal()].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)),
   );
 
+  /**
+   * All categories for pickers: built-in presets first, then custom (A–Z).
+   * Includes any category still referenced by an expense.
+   */
+  readonly allCategories = computed(() => {
+    const custom = this.customCategoriesSignal();
+    const fromExpenses = this.expensesSignal().map((e) => e.category);
+    const seen = new Set<string>();
+    const result: string[] = [];
+
+    for (const name of [...EXPENSE_CATEGORIES, ...custom, ...fromExpenses]) {
+      const normalized = normalizeExpenseCategory(name);
+      const key = normalized.toLowerCase();
+      if (!normalized || seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      result.push(normalized);
+    }
+    return result;
+  });
+
   constructor(private readonly storage: StorageService) {
     const data = this.storage.load();
     this.residentsSignal.set(data.residents);
     this.monthsSignal.set(data.months);
     this.paymentsSignal.set(data.payments);
     this.expensesSignal.set(data.expenses);
+    this.customCategoriesSignal.set(data.customCategories ?? []);
     this.ensureCurrentMonth();
+    // Drop months that were opened by browsing but never had real activity.
+    this.pruneEmptyMonths();
+  }
+
+  /**
+   * Register a category (built-in or custom). Returns the canonical name.
+   * Custom names are persisted for future expense forms.
+   */
+  addCategory(name: string): string {
+    const normalized = normalizeExpenseCategory(name);
+    const isBuiltin = EXPENSE_CATEGORIES.some(
+      (c) => c.toLowerCase() === normalized.toLowerCase(),
+    );
+    if (!isBuiltin) {
+      const exists = this.customCategoriesSignal().some(
+        (c) => c.toLowerCase() === normalized.toLowerCase(),
+      );
+      if (!exists) {
+        this.customCategoriesSignal.update((list) =>
+          [...list, normalized].sort((a, b) => a.localeCompare(b)),
+        );
+        this.persist();
+      }
+    }
+    return normalized;
   }
 
   // --- Residents ---
@@ -148,10 +200,20 @@ export class HostelStore {
 
   // --- Months & payments ---
 
+  /** Whether a month shell exists in storage (was opened / tracked). */
+  hasMonth(monthId: string): boolean {
+    return this.monthsSignal().some((item) => item.id === monthId);
+  }
+
   ensureCurrentMonth(): MonthRecord {
     return this.ensureMonth(monthIdFromDate());
   }
 
+  /**
+   * Create or refresh a month and seed unpaid rows for active residents.
+   * Prefer {@link selectMonthView} for browsing — only call this when the user
+   * intentionally starts tracking or the month already exists.
+   */
   ensureMonth(monthId: string): MonthRecord {
     const existing = this.monthsSignal().find((item) => item.id === monthId);
     if (existing) {
@@ -183,6 +245,86 @@ export class HostelStore {
   createMonth(year: number, month: number): MonthRecord {
     const monthId = `${year}-${String(month).padStart(2, '0')}`;
     return this.ensureMonth(monthId);
+  }
+
+  /**
+   * Browse a month without creating it.
+   * If the month is already open, refresh payment seeds for new residents.
+   * Always keeps the current calendar month available.
+   * Drops other months that still have no real payment/expense activity.
+   */
+  prepareMonthView(monthId: string): void {
+    const currentId = monthIdFromDate();
+    if (monthId === currentId || this.hasMonth(monthId)) {
+      this.ensureMonth(monthId);
+    }
+    this.pruneEmptyMonths({ keepMonthIds: [monthId, currentId] });
+  }
+
+  /**
+   * Explicitly start tracking a month (e.g. past month from the calendar).
+   * Creates the month shell and seeds unpaid payment rows.
+   */
+  startTrackingMonth(monthId: string): MonthRecord {
+    const record = this.ensureMonth(monthId);
+    this.pruneEmptyMonths({ keepMonthIds: [monthId, monthIdFromDate()] });
+    return record;
+  }
+
+  /**
+   * A month is “empty” when it has no meaningful activity:
+   * no paid payments, no notes, no customized amounts, and no expenses in that month.
+   * The current calendar month is never treated as empty (always kept).
+   */
+  isMonthEmpty(monthId: string): boolean {
+    if (monthId === monthIdFromDate()) {
+      return false;
+    }
+
+    const payments = this.paymentsSignal().filter((p) => p.monthId === monthId);
+    for (const payment of payments) {
+      if (payment.paid) {
+        return false;
+      }
+      if (payment.notes.trim()) {
+        return false;
+      }
+      const resident = this.residentsSignal().find((r) => r.id === payment.residentId);
+      if (resident && payment.amount !== resident.monthlyFee) {
+        return false;
+      }
+    }
+
+    const hasExpenses = this.expensesSignal().some(
+      (expense) => expense.date.length >= 7 && expense.date.startsWith(monthId),
+    );
+    if (hasExpenses) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Remove month shells that were opened but never used (no real payments/expenses).
+   * Current calendar month is always kept.
+   */
+  pruneEmptyMonths(options?: { keepMonthIds?: string[] }): void {
+    const keep = new Set(options?.keepMonthIds ?? []);
+    keep.add(monthIdFromDate());
+
+    const toRemove = this.monthsSignal()
+      .filter((month) => !keep.has(month.id) && this.isMonthEmpty(month.id))
+      .map((month) => month.id);
+
+    if (toRemove.length === 0) {
+      return;
+    }
+
+    const removeSet = new Set(toRemove);
+    this.monthsSignal.update((list) => list.filter((item) => !removeSet.has(item.id)));
+    this.paymentsSignal.update((list) => list.filter((item) => !removeSet.has(item.monthId)));
+    this.persist();
   }
 
   /**
@@ -257,10 +399,11 @@ export class HostelStore {
 
   addExpense(input: ExpenseInput): Expense {
     const timestamp = nowIso();
+    const category = this.addCategory(String(input.category ?? ''));
     const expense: Expense = {
       id: createId(),
       title: String(input.title ?? '').trim(),
-      category: input.category,
+      category,
       amount: Number(input.amount) || 0,
       date: input.date || todayDate(),
       description: String(input.description ?? '').trim(),
@@ -276,6 +419,7 @@ export class HostelStore {
   }
 
   updateExpense(id: string, input: ExpenseInput): void {
+    const category = this.addCategory(String(input.category ?? ''));
     this.expensesSignal.update((list) =>
       list.map((expense) => {
         if (expense.id !== id) {
@@ -284,7 +428,7 @@ export class HostelStore {
         return {
           ...expense,
           title: String(input.title ?? '').trim(),
-          category: input.category,
+          category,
           amount: Number(input.amount) || 0,
           date: input.date,
           description: String(input.description ?? '').trim(),
@@ -295,6 +439,24 @@ export class HostelStore {
       }),
     );
     this.persist();
+  }
+
+  /** All payments for a resident, newest month first. */
+  getPaymentsForResident(residentId: string): Payment[] {
+    return this.paymentsSignal()
+      .filter((payment) => payment.residentId === residentId)
+      .sort((a, b) => b.monthId.localeCompare(a.monthId) || b.updatedAt.localeCompare(a.updatedAt));
+  }
+
+  /** Unique YYYY-MM keys derived from expense dates (newest first). */
+  expenseMonthIds(): string[] {
+    const ids = new Set<string>();
+    for (const expense of this.expensesSignal()) {
+      if (expense.date.length >= 7) {
+        ids.add(expense.date.slice(0, 7));
+      }
+    }
+    return [...ids].sort((a, b) => b.localeCompare(a));
   }
 
   markExpensePaid(id: string, paid: boolean): void {
@@ -452,6 +614,7 @@ export class HostelStore {
       months: this.monthsSignal(),
       payments: this.paymentsSignal(),
       expenses: this.expensesSignal(),
+      customCategories: this.customCategoriesSignal(),
     });
   }
 }

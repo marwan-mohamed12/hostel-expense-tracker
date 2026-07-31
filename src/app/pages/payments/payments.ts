@@ -24,9 +24,10 @@ export class PaymentsPage {
   readonly payments = this.store.payments;
   readonly residents = this.store.residents;
 
+  /** Current month is ensured on store boot; open it by default. */
   readonly selectedMonthId = signal(this.store.ensureCurrentMonth().id);
-  readonly newYear = signal(new Date().getFullYear());
-  readonly newMonth = signal(new Date().getMonth() + 1);
+  readonly monthPickerOpen = signal(false);
+  readonly calendarYear = signal(Number(this.selectedMonthId().slice(0, 4)));
 
   readonly selectedMonth = computed(() => {
     this.language.lang();
@@ -43,12 +44,25 @@ export class PaymentsPage {
     };
   });
 
-  readonly monthButtons = computed(() => {
+  readonly calendarMonths = computed(() => {
     this.language.lang();
-    return this.months().map((month) => ({
-      ...month,
-      displayLabel: this.language.formatMonthLabel(month.year, month.month),
-    }));
+    const year = this.calendarYear();
+    const selected = this.selectedMonthId();
+    const now = new Date();
+    const currentId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const openIds = new Set(this.months().map((m) => m.id));
+
+    return this.monthNumbers.map((month) => {
+      const id = `${year}-${String(month).padStart(2, '0')}`;
+      return {
+        id,
+        month,
+        shortLabel: this.transloco.translate(`months.${month}`),
+        selected: selected === id,
+        isCurrent: currentId === id,
+        isOpen: openIds.has(id),
+      };
+    });
   });
 
   readonly rows = computed(() => {
@@ -97,19 +111,72 @@ export class PaymentsPage {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  /** Whether the selected month has a persisted tracking shell. */
+  readonly monthIsOpen = computed(() => this.store.hasMonth(this.selectedMonthId()));
+
+  /**
+   * Browse a month from the calendar without creating it.
+   * Already-open months (and the current calendar month) stay available.
+   */
   selectMonth(monthId: string): void {
-    this.store.ensureMonth(monthId);
+    this.store.prepareMonthView(monthId);
     this.selectedMonthId.set(monthId);
+    this.calendarYear.set(Number(monthId.slice(0, 4)));
+    this.monthPickerOpen.set(false);
   }
 
-  createMonth(): void {
-    const record = this.store.createMonth(this.newYear(), this.newMonth());
+  /** Explicitly open tracking for a past/unopened month (seeds payment rows). */
+  startTracking(): void {
+    const id = this.selectedMonthId();
+    const record = this.store.startTrackingMonth(id);
     this.selectedMonthId.set(record.id);
     this.toast.success(
       this.transloco.translate('payments.monthOpenedToast', {
         month: this.language.formatMonthLabel(record.year, record.month),
       }),
     );
+  }
+
+  pickCalendarMonth(month: number): void {
+    const year = this.calendarYear();
+    this.selectMonth(`${year}-${String(month).padStart(2, '0')}`);
+  }
+
+  shiftCalendarYear(delta: number): void {
+    this.calendarYear.update((y) => y + delta);
+  }
+
+  goToCurrentMonth(): void {
+    const now = new Date();
+    this.selectMonth(
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+    );
+  }
+
+  shiftMonth(delta: number): void {
+    const id = this.selectedMonthId();
+    let year = Number(id.slice(0, 4));
+    let month = Number(id.slice(5, 7)) + delta;
+    while (month < 1) {
+      month += 12;
+      year -= 1;
+    }
+    while (month > 12) {
+      month -= 12;
+      year += 1;
+    }
+    this.selectMonth(`${year}-${String(month).padStart(2, '0')}`);
+  }
+
+  toggleMonthPicker(): void {
+    if (!this.monthPickerOpen()) {
+      this.calendarYear.set(Number(this.selectedMonthId().slice(0, 4)));
+    }
+    this.monthPickerOpen.update((open) => !open);
+  }
+
+  closeMonthPicker(): void {
+    this.monthPickerOpen.set(false);
   }
 
   async deleteMonth(): Promise<void> {

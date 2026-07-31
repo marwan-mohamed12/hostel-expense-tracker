@@ -1,6 +1,7 @@
-﻿export interface Expense {
+export interface Expense {
   id: string;
   title: string;
+  /** Built-in preset or user-defined category label. */
   category: string;
   amount: number;
   date: string;

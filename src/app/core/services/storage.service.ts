@@ -1,21 +1,32 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { AppData } from '../../models/app-data.model';
 import { Expense } from '../../models/expense.model';
-import { STORAGE_KEY } from '../constants/app.constants';
+import {
+  EXPENSE_CATEGORIES,
+  normalizeExpenseCategory,
+  STORAGE_KEY,
+} from '../constants/app.constants';
 
 const EMPTY_DATA: AppData = {
   residents: [],
   months: [],
   payments: [],
   expenses: [],
+  customCategories: [],
 };
 
-/** Older saved expenses had no `paid` flag; treat them as already paid. */
+const BUILTIN_LOWER = new Set(EXPENSE_CATEGORIES.map((c) => c.toLowerCase()));
+
+/**
+ * Normalize legacy expense rows:
+ * - missing `paid` → true (keep historical balance)
+ * - category: empty → Other; known preset casing; custom labels kept
+ */
 function normalizeExpense(raw: Partial<Expense>): Expense {
   return {
     id: String(raw.id ?? ''),
     title: String(raw.title ?? ''),
-    category: String(raw.category ?? 'Other'),
+    category: normalizeExpenseCategory(raw.category),
     amount: Number(raw.amount) || 0,
     date: String(raw.date ?? ''),
     description: String(raw.description ?? ''),
@@ -24,6 +35,30 @@ function normalizeExpense(raw: Partial<Expense>): Expense {
     createdAt: String(raw.createdAt ?? ''),
     updatedAt: String(raw.updatedAt ?? ''),
   };
+}
+
+function normalizeCustomCategories(
+  stored: unknown,
+  expenses: Expense[],
+): string[] {
+  const fromStorage = Array.isArray(stored)
+    ? stored.map((item) => normalizeExpenseCategory(item)).filter(Boolean)
+    : [];
+  const fromExpenses = expenses
+    .map((e) => e.category)
+    .filter((c) => c && !BUILTIN_LOWER.has(c.toLowerCase()));
+
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const name of [...fromStorage, ...fromExpenses]) {
+    const key = name.toLowerCase();
+    if (BUILTIN_LOWER.has(key) || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    result.push(name);
+  }
+  return result.sort((a, b) => a.localeCompare(b));
 }
 
 @Injectable({ providedIn: 'root' })
@@ -44,6 +79,7 @@ export class StorageService {
         months: Array.isArray(parsed.months) ? parsed.months : [],
         payments: Array.isArray(parsed.payments) ? parsed.payments : [],
         expenses,
+        customCategories: normalizeCustomCategories(parsed.customCategories, expenses),
       };
     } catch {
       return structuredClone(EMPTY_DATA);

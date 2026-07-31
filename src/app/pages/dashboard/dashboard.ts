@@ -20,21 +20,35 @@ export class DashboardPage {
   /** Session-only hide of the soft banner (full skip uses journey.complete). */
   readonly bannerDismissed = signal(false);
 
+  /** Selected month for monthly history (defaults to current). */
+  readonly selectedMonthId = signal(this.store.ensureCurrentMonth().id);
+
+  /** Calendar popover open state. */
+  readonly monthPickerOpen = signal(false);
+
+  /** Year shown in the month-grid calendar (independent of selection until a month is picked). */
+  readonly calendarYear = signal(Number(this.selectedMonthId().slice(0, 4)));
+
+  readonly monthNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+
   readonly stats = computed(() => {
-    // Recompute labels when language changes.
     this.language.lang();
     this.transloco.getActiveLang();
-    const base = this.store.getDashboardStats();
+    const base = this.store.getDashboardStats(this.selectedMonthId());
     return {
       ...base,
       monthLabel: this.language.formatMonthId(base.monthId),
     };
   });
 
-  readonly months = this.store.monthsNewestFirst;
-  readonly recentExpenses = computed(() => this.store.expensesNewestFirst().slice(0, 5));
+  readonly recentExpenses = computed(() => {
+    const monthId = this.selectedMonthId();
+    return this.store
+      .expensesNewestFirst()
+      .filter((expense) => expense.date.startsWith(monthId))
+      .slice(0, 5);
+  });
 
-  /** Show soft CTA when tour not completed and user has little data yet. */
   readonly showJourneyBanner = computed(() => {
     if (this.journey.completed() || this.bannerDismissed() || this.journey.isOpen()) {
       return false;
@@ -54,7 +68,6 @@ export class DashboardPage {
       }));
   });
 
-  /** Share of active residents paid this month (0–100). */
   readonly paidProgress = computed(() => {
     const s = this.stats();
     const total = s.paidCount + s.unpaidCount;
@@ -64,13 +77,91 @@ export class DashboardPage {
     return Math.round((s.paidCount / total) * 100);
   });
 
+  /** Months in the calendar year for the grid. */
+  readonly calendarMonths = computed(() => {
+    this.language.lang();
+    const year = this.calendarYear();
+    const selected = this.selectedMonthId();
+    const now = new Date();
+    const currentId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    return this.monthNumbers.map((month) => {
+      const id = `${year}-${String(month).padStart(2, '0')}`;
+      return {
+        id,
+        month,
+        shortLabel: this.transloco.translate(`months.${month}`),
+        selected: selected === id,
+        isCurrent: currentId === id,
+      };
+    });
+  });
+
+  /**
+   * Browse a month from the calendar without creating an empty shell.
+   * Current / already-open months stay available; unused browsed months are pruned.
+   */
+  selectMonth(monthId: string): void {
+    this.store.prepareMonthView(monthId);
+    this.selectedMonthId.set(monthId);
+    this.calendarYear.set(Number(monthId.slice(0, 4)));
+    this.monthPickerOpen.set(false);
+  }
+
+  pickCalendarMonth(month: number): void {
+    const year = this.calendarYear();
+    this.selectMonth(`${year}-${String(month).padStart(2, '0')}`);
+  }
+
+  shiftCalendarYear(delta: number): void {
+    this.calendarYear.update((y) => y + delta);
+  }
+
+  goToCurrentMonth(): void {
+    const now = new Date();
+    this.selectMonth(
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+    );
+  }
+
+  /** Move selected month by one calendar month. */
+  shiftMonth(delta: number): void {
+    const id = this.selectedMonthId();
+    let year = Number(id.slice(0, 4));
+    let month = Number(id.slice(5, 7)) + delta;
+    while (month < 1) {
+      month += 12;
+      year -= 1;
+    }
+    while (month > 12) {
+      month -= 12;
+      year += 1;
+    }
+    this.selectMonth(`${year}-${String(month).padStart(2, '0')}`);
+  }
+
+  toggleMonthPicker(): void {
+    if (!this.monthPickerOpen()) {
+      this.calendarYear.set(Number(this.selectedMonthId().slice(0, 4)));
+    }
+    this.monthPickerOpen.update((open) => !open);
+  }
+
+  closeMonthPicker(): void {
+    this.monthPickerOpen.set(false);
+  }
+
+  categoryLabel(category: string): string {
+    this.language.lang();
+    return this.language.categoryLabel(category);
+  }
+
   openJourney(): void {
     this.journey.open(true);
   }
 
   dismissBanner(): void {
     this.bannerDismissed.set(true);
-    // Remember skip so first-visit auto-open does not nag on reload.
     this.journey.completeAndClose();
   }
 
