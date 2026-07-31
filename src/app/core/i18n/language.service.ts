@@ -10,6 +10,8 @@ export class LanguageService {
   private readonly transloco = inject(TranslocoService);
 
   readonly lang = signal<AppLang>(this.readStoredOrDefault());
+  /** True while the target language dictionary is loading over HTTP. */
+  readonly isLoading = signal(false);
 
   /** Apply dir/lang/title after translations for the active lang are available. */
   init(): void {
@@ -17,17 +19,32 @@ export class LanguageService {
   }
 
   setLanguage(lang: AppLang): void {
-    this.lang.set(lang);
-    this.transloco.setActiveLang(lang);
+    if (this.isLoading() || lang === this.lang()) {
+      return;
+    }
+
+    this.isLoading.set(true);
     try {
       localStorage.setItem(LANG_STORAGE_KEY, lang);
     } catch {
       // ignore quota / private mode
     }
 
+    // Keep the previous language visible (and translated) until the target
+    // dictionary is ready, so the overlay label stays readable.
     this.transloco.load(lang).subscribe({
-      next: () => this.applyDocument(lang),
-      error: () => this.applyDocument(lang),
+      next: () => {
+        this.lang.set(lang);
+        this.transloco.setActiveLang(lang);
+        this.applyDocument(lang);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.lang.set(lang);
+        this.transloco.setActiveLang(lang);
+        this.applyDocument(lang);
+        this.isLoading.set(false);
+      },
     });
   }
 

@@ -3,10 +3,11 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 import { LanguageService } from './core/i18n/language.service';
+import { LoadingSpinner } from './shared/ui/loading-spinner';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoPipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoPipe, LoadingSpinner],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

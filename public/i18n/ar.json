@@ -16,7 +16,8 @@
   "lang": {
     "switchTo": "ع",
     "switchToEn": "EN",
-    "aria": "غيّر اللغة"
+    "aria": "غيّر اللغة",
+    "loading": "بنغيّر اللغة…"
   },
   "common": {
     "cancel": "إلغاء",
@@ -51,7 +52,8 @@
     "emDash": "—",
     "yesDelete": "أيوه، امسح",
     "year": "السنة",
-    "month": "الشهر"
+    "month": "الشهر",
+    "loading": "بيحمّل…"
   },
   "months": {
     "1": "يناير",
@@ -103,7 +105,8 @@
     "unpaidThisMonth": "لسه مادفعوش الشهر ده",
     "everyonePaid": "كلهم دفعوا عن {{month}}.",
     "recentExpenses": "آخر مصاريف",
-    "noExpenses": "مفيش مصاريف متسجّلة لسه."
+    "noExpenses": "مفيش مصاريف متسجّلة لسه.",
+    "loading": "بنحمّل الرئيسية…"
   },
   "residents": {
     "eyebrow": "الناس",
@@ -127,7 +130,8 @@
     "removeText": "سجل تحصيله هيتمسح كمان.",
     "removeConfirm": "أيوه، شيّله",
     "removedTitle": "الساكن اتشال",
-    "removedText": "{{name}} اتمسح."
+    "removedText": "{{name}} اتمسح.",
+    "loading": "بنحمّل السكان…"
   },
   "payments": {
     "eyebrow": "الفلوس الداخلة",
@@ -153,7 +157,8 @@
     "deletePaidNote": " <strong>(منهم {{paidCount}} متعلّمين إنهم دفعوا)</strong>",
     "deleteConfirm": "أيوه، امسح الشهر",
     "deletedTitle": "الشهر اتمسح",
-    "deletedText": "{{month}} وسجلات تحصيله اتمسحوا."
+    "deletedText": "{{month}} وسجلات تحصيله اتمسحوا.",
+    "loading": "بنحمّل التحصيل…"
   },
   "expenses": {
     "eyebrow": "الفلوس الخارجة",
@@ -180,6 +185,7 @@
     "deleteText": "\"{{title}}\" هيتشال نهائي.",
     "deleteConfirm": "أيوه، امسح المصروف",
     "deletedTitle": "المصروف اتمسح",
-    "deletedText": "\"{{title}}\" اتشال."
+    "deletedText": "\"{{title}}\" اتشال.",
+    "loading": "بنحمّل المصاريف…"
   }
 }

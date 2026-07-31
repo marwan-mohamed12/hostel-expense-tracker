@@ -6,10 +6,11 @@ import { DEFAULT_MONTHLY_FEE } from '../../core/constants/app.constants';
 import { HostelStore } from '../../core/services/hostel.store';
 import { confirmDelete, showSuccessToast } from '../../core/utils/swal-dialog';
 import { Resident } from '../../models/resident.model';
+import { LoadingSpinner } from '../../shared/ui/loading-spinner';
 
 @Component({
   selector: 'app-residents',
-  imports: [ReactiveFormsModule, CurrencyPipe, TranslocoPipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, TranslocoPipe, LoadingSpinner],
   templateUrl: './residents.html',
 })
 export class ResidentsPage {
@@ -18,9 +19,15 @@ export class ResidentsPage {
   private readonly transloco = inject(TranslocoService);
 
   readonly residents = this.store.residents;
+  /** True while residents list is loading (wired for future API). */
+  readonly listLoading = this.store.residentsLoading;
   readonly filter = signal<'all' | 'active' | 'inactive'>('all');
   readonly editingId = signal<string | null>(null);
   readonly showForm = signal(false);
+
+  constructor() {
+    void this.store.loadResidents();
+  }
 
   readonly filterOptions = [
     { id: 'all' as const, labelKey: 'common.all' },

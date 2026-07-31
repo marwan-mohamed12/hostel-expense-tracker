@@ -38,10 +38,21 @@ export class HostelStore {
   private readonly paymentsSignal = signal<Payment[]>([]);
   private readonly expensesSignal = signal<Expense[]>([]);
 
+  /** List/page loading flags — flip around async work when a backend is added. */
+  private readonly paymentsLoadingSignal = signal(false);
+  private readonly residentsLoadingSignal = signal(false);
+  private readonly expensesLoadingSignal = signal(false);
+  private readonly dashboardLoadingSignal = signal(false);
+
   readonly residents = this.residentsSignal.asReadonly();
   readonly months = this.monthsSignal.asReadonly();
   readonly payments = this.paymentsSignal.asReadonly();
   readonly expenses = this.expensesSignal.asReadonly();
+
+  readonly paymentsLoading = this.paymentsLoadingSignal.asReadonly();
+  readonly residentsLoading = this.residentsLoadingSignal.asReadonly();
+  readonly expensesLoading = this.expensesLoadingSignal.asReadonly();
+  readonly dashboardLoading = this.dashboardLoadingSignal.asReadonly();
 
   readonly activeResidents = computed(() =>
     this.residentsSignal().filter((resident) => resident.active),
@@ -62,6 +73,56 @@ export class HostelStore {
     this.paymentsSignal.set(data.payments);
     this.expensesSignal.set(data.expenses);
     this.ensureCurrentMonth();
+  }
+
+  // --- Async load helpers (localStorage now; replace bodies with API later) ---
+
+  /**
+   * Ensures a month exists and surfaces its payments under a loading flag.
+   * UI should await this when switching months so a future API can plug in.
+   */
+  async loadMonthPayments(monthId: string): Promise<Payment[]> {
+    this.paymentsLoadingSignal.set(true);
+    try {
+      this.ensureMonth(monthId);
+      // Future: const remote = await this.api.getPayments(monthId); merge into paymentsSignal
+      return this.getPaymentsForMonth(monthId);
+    } finally {
+      this.paymentsLoadingSignal.set(false);
+    }
+  }
+
+  /** Refresh residents list under a loading flag (backend-ready). */
+  async loadResidents(): Promise<Resident[]> {
+    this.residentsLoadingSignal.set(true);
+    try {
+      // Future: const remote = await this.api.getResidents(); this.residentsSignal.set(remote);
+      return this.residentsSignal();
+    } finally {
+      this.residentsLoadingSignal.set(false);
+    }
+  }
+
+  /** Refresh expenses list under a loading flag (backend-ready). */
+  async loadExpenses(): Promise<Expense[]> {
+    this.expensesLoadingSignal.set(true);
+    try {
+      // Future: const remote = await this.api.getExpenses(); this.expensesSignal.set(remote);
+      return this.expensesSignal();
+    } finally {
+      this.expensesLoadingSignal.set(false);
+    }
+  }
+
+  /** Refresh dashboard data under a loading flag (backend-ready). */
+  async loadDashboard(): Promise<void> {
+    this.dashboardLoadingSignal.set(true);
+    try {
+      this.ensureCurrentMonth();
+      // Future: await Promise.all([this.api.getStats(), ...])
+    } finally {
+      this.dashboardLoadingSignal.set(false);
+    }
   }
 
   // --- Residents ---
