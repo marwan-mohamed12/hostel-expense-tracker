@@ -102,14 +102,12 @@ export class ResidentsPage {
     if (editingId) {
       this.store.updateResident(editingId, payload);
       this.toast.success(
-        this.transloco.translate('residents.updatedTitle'),
-        this.transloco.translate('residents.updatedText', { name: payload.name }),
+        this.transloco.translate('residents.updatedToast', { name: payload.name }),
       );
     } else {
       this.store.addResident(payload);
       this.toast.success(
-        this.transloco.translate('residents.createdTitle'),
-        this.transloco.translate('residents.createdText', { name: payload.name }),
+        this.transloco.translate('residents.createdToast', { name: payload.name }),
       );
     }
 
@@ -119,17 +117,12 @@ export class ResidentsPage {
   toggleActive(resident: Resident): void {
     const nextActive = !resident.active;
     this.store.setResidentActive(resident.id, nextActive);
-    if (nextActive) {
-      this.toast.success(
-        this.transloco.translate('residents.activatedTitle'),
-        this.transloco.translate('residents.activatedText', { name: resident.name }),
-      );
-    } else {
-      this.toast.success(
-        this.transloco.translate('residents.deactivatedTitle'),
-        this.transloco.translate('residents.deactivatedText', { name: resident.name }),
-      );
-    }
+    this.toast.success(
+      this.transloco.translate(
+        nextActive ? 'residents.activatedToast' : 'residents.deactivatedToast',
+        { name: resident.name },
+      ),
+    );
   }
 
   async remove(resident: Resident): Promise<void> {
@@ -150,8 +143,7 @@ export class ResidentsPage {
     }
 
     this.toast.success(
-      this.transloco.translate('residents.removedTitle'),
-      this.transloco.translate('residents.removedText', { name: resident.name }),
+      this.transloco.translate('residents.removedToast', { name: resident.name }),
     );
   }
 }

@@ -1,18 +1,24 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AngularToastifyModule } from 'angular-toastify';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 import { LanguageService } from './core/i18n/language.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoPipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoPipe, AngularToastifyModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
   private readonly router = inject(Router);
   readonly language = inject(LanguageService);
+
+  /** Corner for toast container (start edge in RTL). */
+  readonly toastPosition = computed(() =>
+    this.language.lang() === 'ar' ? 'top-left' : 'top-right',
+  );
 
   readonly menuOpen = signal(false);
 

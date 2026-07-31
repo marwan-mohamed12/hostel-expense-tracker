@@ -1,37 +1,23 @@
 import { inject, Injectable } from '@angular/core';
-import { ToastrService } from 'ngx-toastr';
-import { LanguageService } from '../i18n/language.service';
+import { ToastService as AngularToastifyService } from 'angular-toastify';
 
 /**
- * Thin wrapper around ngx-toastr with RTL-aware corner placement.
- * Use for non-blocking success feedback after mutations.
- * Keep SweetAlert2 for destructive confirms only.
+ * App-facing toast API (single sentence).
+ * Wraps angular-toastify. Keep SweetAlert2 for destructive confirms only.
  */
 @Injectable({ providedIn: 'root' })
 export class ToastService {
-  private readonly toastr = inject(ToastrService);
-  private readonly language = inject(LanguageService);
+  private readonly toastify = inject(AngularToastifyService);
 
-  success(title: string, message?: string): void {
-    this.toastr.success(message ?? '', title, {
-      positionClass: this.positionClass(),
-    });
+  success(message: string): void {
+    this.toastify.success(message);
   }
 
-  info(title: string, message?: string): void {
-    this.toastr.info(message ?? '', title, {
-      positionClass: this.positionClass(),
-    });
+  info(message: string): void {
+    this.toastify.info(message);
   }
 
-  error(title: string, message?: string): void {
-    this.toastr.error(message ?? '', title, {
-      positionClass: this.positionClass(),
-    });
-  }
-
-  private positionClass(): string {
-    // Arabic (RTL): toast on the start edge (visually left).
-    return this.language.lang() === 'ar' ? 'toast-top-left' : 'toast-top-right';
+  error(message: string): void {
+    this.toastify.error(message);
   }
 }

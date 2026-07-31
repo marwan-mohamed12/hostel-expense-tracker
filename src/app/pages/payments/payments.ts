@@ -89,8 +89,7 @@ export class PaymentsPage {
     const record = this.store.createMonth(this.newYear(), this.newMonth());
     this.selectedMonthId.set(record.id);
     this.toast.success(
-      this.transloco.translate('payments.monthOpenedTitle'),
-      this.transloco.translate('payments.monthOpenedText', {
+      this.transloco.translate('payments.monthOpenedToast', {
         month: this.language.formatMonthLabel(record.year, record.month),
       }),
     );
@@ -132,8 +131,7 @@ export class PaymentsPage {
     }
 
     this.toast.success(
-      this.transloco.translate('payments.deletedTitle'),
-      this.transloco.translate('payments.deletedText', { month: month.label }),
+      this.transloco.translate('payments.deletedToast', { month: month.label }),
     );
   }
 
@@ -146,17 +144,12 @@ export class PaymentsPage {
       payment.amount,
       nextPaid ? payment.paidAt || new Date().toISOString().slice(0, 10) : undefined,
     );
-    if (nextPaid) {
-      this.toast.success(
-        this.transloco.translate('payments.markedPaidTitle'),
-        this.transloco.translate('payments.markedPaidText', { name: residentName }),
-      );
-    } else {
-      this.toast.success(
-        this.transloco.translate('payments.markedUnpaidTitle'),
-        this.transloco.translate('payments.markedUnpaidText', { name: residentName }),
-      );
-    }
+    this.toast.success(
+      this.transloco.translate(
+        nextPaid ? 'payments.markedPaidToast' : 'payments.markedUnpaidToast',
+        { name: residentName },
+      ),
+    );
   }
 
   onAmountChange(payment: Payment, value: string | number): void {

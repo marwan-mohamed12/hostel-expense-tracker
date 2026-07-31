@@ -54,9 +54,14 @@
           </span>
           <input
             formControlName="title"
-            class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none ring-teal-500 focus:ring-2"
+            class="w-full rounded-xl border px-3 py-2 outline-none ring-teal-500 focus:ring-2"
+            [class.border-slate-300]="!fieldInvalid('title')"
+            [class.border-rose-400]="fieldInvalid('title')"
             [placeholder]="'expenses.titlePlaceholder' | transloco"
           />
+          @if (fieldInvalid('title')) {
+            <p class="mt-1 text-xs font-medium text-rose-600">{{ 'expenses.titleError' | transloco }}</p>
+          }
         </label>
 
         <label class="block">
@@ -79,11 +84,17 @@
           </span>
           <input
             type="number"
-            min="0"
+            min="0.01"
             step="0.01"
             formControlName="amount"
-            class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none ring-teal-500 focus:ring-2"
+            class="w-full rounded-xl border px-3 py-2 outline-none ring-teal-500 focus:ring-2"
+            [class.border-slate-300]="!fieldInvalid('amount')"
+            [class.border-rose-400]="fieldInvalid('amount')"
+            [placeholder]="'expenses.amountPlaceholder' | transloco"
           />
+          @if (fieldInvalid('amount')) {
+            <p class="mt-1 text-xs font-medium text-rose-600">{{ 'expenses.amountError' | transloco }}</p>
+          }
         </label>
 
         <label class="block">
@@ -93,8 +104,13 @@
           <input
             type="date"
             formControlName="date"
-            class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none ring-teal-500 focus:ring-2"
+            class="w-full rounded-xl border px-3 py-2 outline-none ring-teal-500 focus:ring-2"
+            [class.border-slate-300]="!fieldInvalid('date')"
+            [class.border-rose-400]="fieldInvalid('date')"
           />
+          @if (fieldInvalid('date')) {
+            <p class="mt-1 text-xs font-medium text-rose-600">{{ 'expenses.dateError' | transloco }}</p>
+          }
         </label>
 
         <label class="block">
@@ -103,9 +119,14 @@
           </span>
           <input
             formControlName="addedBy"
-            class="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none ring-teal-500 focus:ring-2"
+            class="w-full rounded-xl border px-3 py-2 outline-none ring-teal-500 focus:ring-2"
+            [class.border-slate-300]="!fieldInvalid('addedBy')"
+            [class.border-rose-400]="fieldInvalid('addedBy')"
             [placeholder]="'expenses.addedByPlaceholder' | transloco"
           />
+          @if (fieldInvalid('addedBy')) {
+            <p class="mt-1 text-xs font-medium text-rose-600">{{ 'expenses.addedByError' | transloco }}</p>
+          }
         </label>
 
         <div class="block md:col-span-2">

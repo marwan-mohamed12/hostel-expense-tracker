@@ -259,12 +259,12 @@ export class HostelStore {
     const timestamp = nowIso();
     const expense: Expense = {
       id: createId(),
-      title: input.title.trim(),
+      title: String(input.title ?? '').trim(),
       category: input.category,
       amount: Number(input.amount) || 0,
       date: input.date || todayDate(),
-      description: input.description.trim(),
-      addedBy: input.addedBy.trim(),
+      description: String(input.description ?? '').trim(),
+      addedBy: String(input.addedBy ?? '').trim(),
       paid: input.paid !== false,
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -283,12 +283,12 @@ export class HostelStore {
         }
         return {
           ...expense,
-          title: input.title.trim(),
+          title: String(input.title ?? '').trim(),
           category: input.category,
           amount: Number(input.amount) || 0,
           date: input.date,
-          description: input.description.trim(),
-          addedBy: input.addedBy.trim(),
+          description: String(input.description ?? '').trim(),
+          addedBy: String(input.addedBy ?? '').trim(),
           paid: input.paid !== false,
           updatedAt: nowIso(),
         };
