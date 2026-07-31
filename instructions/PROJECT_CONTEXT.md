@@ -72,6 +72,7 @@ Every expense record must include:
   - Unpaid expenses total (all-time) when &gt; 0
   - Unpaid list — **active residents only**
 - Dashboard is the **home page** (`/`).
+- **Statistics** page (`/statistics`) holds Phase 3 charts + balance timeline (not on Dashboard). Link from nav + Dashboard “Statistics” CTA.
 
 ### Currency
 - Primary currency is **EGP** (Egyptian Pound).
@@ -92,7 +93,7 @@ Every expense record must include:
 | Persistence | **localStorage** | Client-side for v1; no backend yet |
 | State | **HostelStore** service + Angular signals | Single source of truth in the app |
 | i18n | **@jsverse/transloco** (runtime) | EN + AR; runtime language switch; RTL for Arabic |
-| Charts / statistics | **ApexCharts** via `ng-apexcharts` | Phase 3 dashboard analytics |
+| Charts / statistics | **ApexCharts** via `ng-apexcharts` | Phase 3 **Statistics** page (`/statistics`) |
 | Tests | Vitest (`ng test`) | |
 | Package manager | npm | |
 
@@ -100,8 +101,10 @@ Every expense record must include:
 - Packages: `apexcharts`, `ng-apexcharts` (standalone `ChartComponent` / `<apx-chart>`).
 - Allowed as CommonJS in `angular.json` → `allowedCommonJsDependencies: ["sweetalert2", "apexcharts"]`.
 - Dynamic import of `apexcharts/client` (no `scripts[]` entry required for modern Angular builds).
-- Dashboard charts remount via `@for (mount of [chartMountKey()]; track mount)` so theme/lang/data changes rebuild the chart.
+- **Route:** `/statistics` lazy-loaded via `loadComponent` so ApexCharts is not in the initial Dashboard bundle.
+- Charts remount via `@for (mount of [chartMountKey()]; track mount)` so theme/lang/data changes rebuild the chart.
 - Store aggregations: `getMonthlyChartSeries`, `getCategoryBreakdown`, `getBalanceTimeline`.
+- UI copy under `statistics.*` (EN/AR); nav key `nav.statistics`.
 
 ### SweetAlert2 notes
 - Package: `sweetalert2` (listed in `package.json`).
@@ -218,7 +221,8 @@ src/app/
     expense.model.ts
     app-data.model.ts    # AppData + DashboardStats
   pages/
-    dashboard/           # Home overview (+ empty-state journey banner)
+    dashboard/           # Home overview (ops snapshot; no charts)
+    statistics/          # Phase 3 charts + balance timeline (lazy route)
     residents/           # Resident CRUD + active/inactive
     payments/            # Monthly payment tracking
     expenses/            # Expense management
@@ -427,7 +431,8 @@ These are optional next steps, not commitments:
 21. **Resident history calendar filter:** replaced the month `<select>` in payment history with a year + 12-month calendar grid; multi-select months (toggle); activity months marked with a dot; **All months** / **Unselect all** clear selection.
 22. **Custom toasts:** removed `angular-toastify`; in-house `ToastService` + `app-toast-host` matching soft-ledger design (success/info/error, dark mode, RTL).
 23. **Shared month calendar picker** (`app-month-calendar-picker`): expenses month filter (desktop + mobile dialog) uses calendar icon → year/month grid with activity dots instead of `<select>`.
-24. **Phase 3 — statistics & balance timeline:** ApexCharts on Dashboard (monthly expenses bar, collection rate line, category donut, balance area trend) + chronological balance timeline (paid payments in / paid expenses out with running balance). Store helpers and EN/AR copy. Issue #19.
+24. **Phase 3 — statistics & balance timeline:** ApexCharts (monthly expenses bar, collection rate line, category donut, balance area trend) + chronological balance timeline (paid payments in / paid expenses out with running balance). Store helpers and EN/AR copy. Issue #19.
+25. **Statistics page split:** moved charts + timeline from Dashboard to dedicated lazy route `/statistics` (nav + Dashboard CTA); Dashboard stays operational snapshot only.
 
 ---
 
@@ -456,8 +461,9 @@ These are optional next steps, not commitments:
 - `src/app/core/i18n/transloco-loader.ts` — translation file loader
 - `public/i18n/en.json`, `public/i18n/ar.json` — UI translation dictionaries (`journey.*` for tour)
 - `src/app/models/*` — data shapes
-- `src/app/app.routes.ts` — navigation
-- `src/app/pages/dashboard/*`
+- `src/app/app.routes.ts` — navigation (`/statistics` lazy-loaded)
+- `src/app/pages/dashboard/*` — home ops snapshot
+- `src/app/pages/statistics/*` — ApexCharts + balance timeline
 - `src/app/pages/residents/*`
 - `src/app/pages/payments/*`
 - `src/app/pages/expenses/*`
@@ -466,4 +472,4 @@ These are optional next steps, not commitments:
 
 ---
 
-*Last updated: Phase 3 (ApexCharts statistics + balance timeline on Dashboard, issue #19); custom toasts (no angular-toastify); resident history multi-select calendar; Phase 2 filters/navigators; user journey; dark mode; UI/UX redesign; SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: Statistics page (`/statistics`, lazy) split from Dashboard; Phase 3 ApexCharts + balance timeline (issue #19); custom toasts; resident history multi-select calendar; Phase 2 filters/navigators; user journey; dark mode; UI/UX redesign; SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
