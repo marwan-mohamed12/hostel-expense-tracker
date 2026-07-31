@@ -9,8 +9,6 @@ import { ToastService } from '../../core/services/toast.service';
 import { confirmDelete } from '../../core/utils/swal-dialog';
 import { Resident } from '../../models/resident.model';
 
-export type HistoryMonthFilter = 'all' | string;
-
 @Component({
   selector: 'app-residents',
   imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, TranslocoPipe],
@@ -23,13 +21,20 @@ export class ResidentsPage {
   private readonly toast = inject(ToastService);
   readonly language = inject(LanguageService);
 
+  readonly monthNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+
   readonly residents = this.store.residents;
   readonly filter = signal<'all' | 'active' | 'inactive'>('all');
   readonly editingId = signal<string | null>(null);
   readonly showForm = signal(false);
   readonly historyResidentId = signal<string | null>(null);
-  /** Payment history: all months or a specific YYYY-MM. */
-  readonly historyMonthFilter = signal<HistoryMonthFilter>('all');
+  /**
+   * Payment history month multi-select (YYYY-MM ids, newest-friendly order not required).
+   * Empty array = show all months.
+   */
+  readonly historySelectedMonths = signal<string[]>([]);
+  /** Year shown in the history month calendar grid. */
+  readonly historyCalendarYear = signal(new Date().getFullYear());
 
   readonly filterOptions = [
     { id: 'all' as const, labelKey: 'common.all' },
@@ -70,31 +75,64 @@ export class ResidentsPage {
     }));
   });
 
-  /** Months available for this resident’s history (newest first). */
-  readonly historyMonthOptions = computed(() => {
-    this.language.lang();
-    const seen = new Set<string>();
-    const options: { id: string; label: string }[] = [];
+  /** Month IDs that have payment activity for the open resident. */
+  readonly historyActivityMonthIds = computed(() => {
+    const ids = new Set<string>();
     for (const row of this.allPaymentHistory()) {
-      if (seen.has(row.monthId)) {
-        continue;
-      }
-      seen.add(row.monthId);
-      options.push({
-        id: row.monthId,
-        label: this.language.formatMonthId(row.monthId),
-      });
+      ids.add(row.monthId);
     }
-    return options;
+    return ids;
+  });
+
+  /** True when no months are picked (show full history). */
+  readonly historyShowsAllMonths = computed(() => this.historySelectedMonths().length === 0);
+
+  /** Year calendar grid for history filter; activity months get a highlight dot. */
+  readonly historyCalendarMonths = computed(() => {
+    this.language.lang();
+    const year = this.historyCalendarYear();
+    const selected = new Set(this.historySelectedMonths());
+    const activityIds = this.historyActivityMonthIds();
+    const now = new Date();
+    const currentId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    return this.monthNumbers.map((month) => {
+      const id = `${year}-${String(month).padStart(2, '0')}`;
+      return {
+        id,
+        month,
+        shortLabel: this.transloco.translate(`months.${month}`),
+        selected: selected.has(id),
+        isCurrent: currentId === id,
+        hasActivity: activityIds.has(id),
+      };
+    });
+  });
+
+  /** Label for the active history month filter (for header context). */
+  readonly historyFilterLabel = computed(() => {
+    this.language.lang();
+    const selected = [...this.historySelectedMonths()].sort((a, b) => b.localeCompare(a));
+    if (selected.length === 0) {
+      return this.transloco.translate('residents.historyAllMonths');
+    }
+    if (selected.length === 1) {
+      return this.language.formatMonthId(selected[0]);
+    }
+    if (selected.length <= 3) {
+      return selected.map((id) => this.language.formatMonthId(id)).join(' · ');
+    }
+    return this.transloco.translate('residents.historyMonthsSelected', { count: selected.length });
   });
 
   readonly paymentHistory = computed(() => {
-    const month = this.historyMonthFilter();
+    const selected = this.historySelectedMonths();
     const rows = this.allPaymentHistory();
-    if (month === 'all') {
+    if (selected.length === 0) {
       return rows;
     }
-    return rows.filter((row) => row.monthId === month);
+    const allowed = new Set(selected);
+    return rows.filter((row) => allowed.has(row.monthId));
   });
 
   readonly paymentHistorySummary = computed(() => {
@@ -150,17 +188,44 @@ export class ResidentsPage {
   }
 
   openHistory(resident: Resident): void {
-    this.historyMonthFilter.set('all');
+    this.historySelectedMonths.set([]);
     this.historyResidentId.set(resident.id);
+    // Prefer the newest activity year when available; otherwise current year.
+    const rows = this.store.getPaymentsForResident(resident.id);
+    if (rows.length > 0) {
+      this.historyCalendarYear.set(Number(rows[0].monthId.slice(0, 4)));
+    } else {
+      this.historyCalendarYear.set(new Date().getFullYear());
+    }
   }
 
   closeHistory(): void {
     this.historyResidentId.set(null);
-    this.historyMonthFilter.set('all');
+    this.historySelectedMonths.set([]);
   }
 
-  setHistoryMonthFilter(value: HistoryMonthFilter): void {
-    this.historyMonthFilter.set(value);
+  /** Clear selection → show every month. */
+  clearHistoryMonthSelection(): void {
+    this.historySelectedMonths.set([]);
+  }
+
+  /**
+   * Toggle a month in the multi-select filter.
+   * Clicking the only selected month clears selection (back to all months).
+   */
+  toggleHistoryCalendarMonth(month: number): void {
+    const year = this.historyCalendarYear();
+    const id = `${year}-${String(month).padStart(2, '0')}`;
+    this.historySelectedMonths.update((current) => {
+      if (current.includes(id)) {
+        return current.filter((m) => m !== id);
+      }
+      return [...current, id];
+    });
+  }
+
+  shiftHistoryCalendarYear(delta: number): void {
+    this.historyCalendarYear.update((y) => y + delta);
   }
 
   save(): void {

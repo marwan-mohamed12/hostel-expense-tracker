@@ -1,11 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AngularToastifyModule } from 'angular-toastify';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 import { LanguageService } from './core/i18n/language.service';
 import { ThemeService } from './core/services/theme.service';
 import { UserJourneyService } from './core/services/user-journey.service';
+import { ToastHostComponent } from './shared/toast/toast-host';
 import { UserJourneyComponent } from './shared/user-journey/user-journey';
 
 @Component({
@@ -15,7 +15,7 @@ import { UserJourneyComponent } from './shared/user-journey/user-journey';
     RouterLink,
     RouterLinkActive,
     TranslocoPipe,
-    AngularToastifyModule,
+    ToastHostComponent,
     UserJourneyComponent,
   ],
   templateUrl: './app.html',
@@ -26,11 +26,6 @@ export class App {
   readonly language = inject(LanguageService);
   readonly theme = inject(ThemeService);
   readonly journey = inject(UserJourneyService);
-
-  /** Corner for toast container (start edge in RTL). */
-  readonly toastPosition = computed(() =>
-    this.language.lang() === 'ar' ? 'top-left' : 'top-right',
-  );
 
   readonly menuOpen = signal(false);
 

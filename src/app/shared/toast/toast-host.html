@@ -1,0 +1,75 @@
+<div
+  class="toast-host pointer-events-none fixed inset-x-0 top-0 z-[100] flex flex-col gap-2.5 p-4 sm:p-5"
+  aria-live="polite"
+  aria-relevant="additions"
+>
+  @for (item of toast.toasts(); track item.id) {
+    <div
+      class="toast-item pointer-events-auto relative ms-auto flex w-full max-w-[22rem] overflow-hidden rounded-2xl border shadow-lg backdrop-blur-xl"
+      [class.toast-success]="item.kind === 'success'"
+      [class.toast-info]="item.kind === 'info'"
+      [class.toast-error]="item.kind === 'error'"
+      role="status"
+    >
+      <!-- Accent bar -->
+      <span class="toast-accent absolute inset-y-0 start-0 w-1" aria-hidden="true"></span>
+
+      <div class="flex min-w-0 flex-1 items-start gap-3 py-3.5 ps-4 pe-2">
+        <span
+          class="toast-icon mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold"
+          aria-hidden="true"
+        >
+          @if (item.kind === 'success') {
+            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fill-rule="evenodd"
+                d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          } @else if (item.kind === 'error') {
+            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"
+              />
+            </svg>
+          } @else {
+            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          }
+        </span>
+
+        <p class="min-w-0 flex-1 pt-1 text-sm font-semibold leading-snug tracking-tight">
+          {{ item.message }}
+        </p>
+
+        <button
+          type="button"
+          class="toast-close -me-0.5 -mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg transition"
+          (click)="dismiss(item.id)"
+          [attr.aria-label]="'common.dismiss' | transloco"
+        >
+          <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Auto-dismiss progress -->
+      @if (item.duration > 0) {
+        <span
+          class="toast-progress absolute inset-x-0 bottom-0 h-0.5 origin-left"
+          [style.animation-duration.ms]="item.duration"
+          aria-hidden="true"
+        ></span>
+      }
+    </div>
+  }
+</div>

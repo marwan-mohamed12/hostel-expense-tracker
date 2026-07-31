@@ -322,11 +322,11 @@
         <table class="min-w-full divide-y divide-slate-100 text-sm dark:divide-white/[0.06]">
           <thead class="ui-table-head">
             <tr>
-              <th class="px-4 py-3.5">{{ 'payments.resident' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'common.amountEgp' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'common.status' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'payments.paymentDate' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'common.notes' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'payments.resident' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.amountEgp' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.status' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'payments.paymentDate' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.notes' | transloco }}</th>
               <th class="px-4 py-3.5 text-end">{{ 'payments.action' | transloco }}</th>
             </tr>
           </thead>
@@ -336,13 +336,13 @@
                 class="align-middle transition hover:bg-slate-50/80 dark:hover:bg-white/[0.04]"
                 [class]="payment.paid ? 'bg-emerald-50/30 dark:bg-emerald-950/20' : ''"
               >
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 text-start">
                   <div class="flex items-center gap-2.5">
                     <span class="ui-avatar">{{ initials(payment.residentName) }}</span>
                     <span class="font-semibold text-slate-900 dark:text-white">{{ payment.residentName }}</span>
                   </div>
                 </td>
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 text-start">
                   <input
                     type="number"
                     min="0"
@@ -352,7 +352,7 @@
                     (ngModelChange)="onAmountChange(payment, $event)"
                   />
                 </td>
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 text-start">
                   <span
                     class="ui-badge"
                     [class.ui-badge-success]="payment.paid"
@@ -361,7 +361,7 @@
                     {{ (payment.paid ? 'common.paid' : 'common.unpaid') | transloco }}
                   </span>
                 </td>
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 text-start">
                   <input
                     type="date"
                     class="ui-input !w-auto !py-1.5 disabled:cursor-not-allowed disabled:opacity-60"
@@ -370,7 +370,7 @@
                     (ngModelChange)="onPaidAtChange(payment, $event)"
                   />
                 </td>
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 text-start">
                   <input
                     type="text"
                     class="ui-input min-w-40 !py-1.5"
