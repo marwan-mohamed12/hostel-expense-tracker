@@ -1,0 +1,9 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Keep trigger looking interactive as a field */
+.month-picker > button.ui-input {
+  cursor: pointer;
+}

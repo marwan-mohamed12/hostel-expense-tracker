@@ -18,7 +18,6 @@
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
     "@jsverse/transloco": "^8.4.0",
-    "angular-toastify": "^2.0.0",
     "rxjs": "~7.8.2",
     "sweetalert2": "^11.26.25",
     "tslib": "^2.3.0"

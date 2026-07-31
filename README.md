@@ -31,7 +31,7 @@ Internal web app for a hostel to track **resident monthly fees**, **shared expen
 
 ### UX
 - Responsive layout: burger nav + cards on mobile; horizontal nav + tables on desktop
-- SweetAlert2 for destructive confirms; angular-toastify for one-line success toasts
+- SweetAlert2 for destructive confirms; custom soft-ledger toasts for one-line success feedback
 - Teal / slate Tailwind UI
 
 ## Tech stack
@@ -41,7 +41,7 @@ Internal web app for a hostel to track **resident monthly fees**, **shared expen
 | Framework | Angular 22 (standalone components, signals) |
 | Styling | Tailwind CSS 4 |
 | Forms | Angular Reactive Forms (+ template forms for quick payment edits) |
-| Dialogs | SweetAlert2 (confirms) + angular-toastify (toasts) |
+| Dialogs | SweetAlert2 (confirms) + custom ToastService (toasts) |
 | State | `HostelStore` + Angular signals |
 | Persistence | `localStorage` (`hostel-expense-tracker-data-v1`) |
 | Tests | Vitest (`ng test`) |
@@ -68,12 +68,13 @@ On some Windows PowerShell setups, use `npm.cmd` if script execution policy bloc
 
 ```text
 src/app/
-  core/           # constants, HostelStore, storage, SweetAlert + angular-toastify helpers
+  core/           # constants, HostelStore, storage, SweetAlert + ToastService
   models/         # Resident, Payment, Expense, AppData
   pages/          # dashboard, residents, payments, expenses
+  shared/         # toast host, user journey
   app.ts          # shell + navigation
   app.routes.ts
-instructions/     # agent / project context notes (Phase 1 handoff)
+instructions/     # agent / project context notes
 ```
 
 ## Business rules (short)

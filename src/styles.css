@@ -198,8 +198,23 @@
     @apply bg-brand-50 text-brand-800 ring-1 ring-inset ring-brand-600/10 dark:bg-brand-950/40 dark:text-brand-300 dark:ring-brand-500/20;
   }
 
+  /**
+   * Table headers: browsers default `th` to text-align:center, which
+   * misaligns labels from left-aligned body cells. Force start (logical)
+   * alignment so headers line up with cell content. Use `text-end` on a
+   * specific th/td pair for action columns.
+   */
   .ui-table-head {
-    @apply bg-slate-50/90 text-start text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-black/50 dark:text-zinc-500;
+    @apply bg-slate-50/90 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-black/50 dark:text-zinc-500;
+  }
+
+  .ui-table-head th {
+    @apply text-start font-semibold;
+  }
+
+  /* Body cells share the same default horizontal alignment as headers */
+  table td {
+    @apply text-start;
   }
 
   .ui-empty {

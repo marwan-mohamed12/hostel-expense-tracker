@@ -248,19 +248,15 @@
         </select>
       </label>
 
-      <label class="block">
+      <div class="block">
         <span class="ui-label">{{ 'common.month' | transloco }}</span>
-        <select
-          class="ui-input"
-          [value]="monthFilter()"
-          (change)="setMonthFilter($any($event.target).value)"
-        >
-          <option value="all">{{ 'expenses.allMonths' | transloco }}</option>
-          @for (month of monthOptions(); track month.id) {
-            <option [value]="month.id">{{ month.label }}</option>
-          }
-        </select>
-      </label>
+        <app-month-calendar-picker
+          [values]="monthFilter()"
+          [activityMonthIds]="expenseActivityMonthIds()"
+          allLabelKey="expenses.allMonths"
+          (valuesChange)="setMonthFilter($event)"
+        />
+      </div>
 
       <label class="block">
         <span class="ui-label">{{ 'common.status' | transloco }}</span>
@@ -318,9 +314,9 @@
         </span>
       </button>
     }
-    @if (monthFilter() !== 'all') {
+    @if (monthFilter().length > 0) {
       <button type="button" (click)="removeMonthFilter()" class="ui-badge ui-badge-brand gap-1.5 pe-1.5">
-        {{ language.formatMonthId(monthFilter()) }}
+        {{ monthFilterLabel() }}
         <span class="rounded-full p-0.5 hover:bg-brand-200/60 dark:hover:bg-brand-800/60" aria-hidden="true">
           <svg class="size-3" viewBox="0 0 12 12" fill="currentColor">
             <path
@@ -421,19 +417,15 @@
             </select>
           </label>
 
-          <label class="block">
+          <div class="block">
             <span class="ui-label">{{ 'common.month' | transloco }}</span>
-            <select
-              class="ui-input"
-              [value]="draftMonth()"
-              (change)="draftMonth.set($any($event.target).value)"
-            >
-              <option value="all">{{ 'expenses.allMonths' | transloco }}</option>
-              @for (month of monthOptions(); track month.id) {
-                <option [value]="month.id">{{ month.label }}</option>
-              }
-            </select>
-          </label>
+            <app-month-calendar-picker
+              [values]="draftMonth()"
+              [activityMonthIds]="expenseActivityMonthIds()"
+              allLabelKey="expenses.allMonths"
+              (valuesChange)="setDraftMonth($event)"
+            />
+          </div>
 
           <label class="block">
             <span class="ui-label">{{ 'common.status' | transloco }}</span>
@@ -576,13 +568,13 @@
         <table class="min-w-full divide-y divide-slate-100 text-sm dark:divide-white/[0.06]">
           <thead class="ui-table-head">
             <tr>
-              <th class="px-4 py-3.5">{{ 'common.title' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'common.category' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'common.amount' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'common.status' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'common.date' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'common.addedBy' | transloco }}</th>
-              <th class="px-4 py-3.5">{{ 'common.description' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.title' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.category' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.amount' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.status' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.date' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.addedBy' | transloco }}</th>
+              <th class="px-4 py-3.5 text-start">{{ 'common.description' | transloco }}</th>
               <th class="px-4 py-3.5 text-end">{{ 'common.actions' | transloco }}</th>
             </tr>
           </thead>
@@ -618,8 +610,8 @@
                 <td class="max-w-xs px-4 py-3.5 text-slate-600 dark:text-zinc-500">
                   {{ expense.description || ('common.emDash' | transloco) }}
                 </td>
-                <td class="px-4 py-3.5">
-                  <div class="flex flex-wrap justify-end gap-2">
+                <td class="px-4 py-3.5 text-end">
+                  <div class="inline-flex flex-wrap justify-end gap-2">
                     @if (expense.paid) {
                       <button type="button" (click)="setPaid(expense, false)" class="ui-btn-warn ui-btn-sm">
                         {{ 'common.markUnpaid' | transloco }}
