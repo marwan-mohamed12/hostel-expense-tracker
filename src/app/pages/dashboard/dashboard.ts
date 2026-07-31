@@ -23,18 +23,13 @@ export class DashboardPage {
   /** Selected month for monthly history (defaults to current). */
   readonly selectedMonthId = signal(this.store.ensureCurrentMonth().id);
 
-  /** Compact month picker open state. */
+  /** Calendar popover open state. */
   readonly monthPickerOpen = signal(false);
 
-  readonly months = this.store.monthsNewestFirst;
+  /** Year shown in the month-grid calendar (independent of selection until a month is picked). */
+  readonly calendarYear = signal(Number(this.selectedMonthId().slice(0, 4)));
 
-  readonly monthButtons = computed(() => {
-    this.language.lang();
-    return this.months().map((month) => ({
-      ...month,
-      displayLabel: this.language.formatMonthLabel(month.year, month.month),
-    }));
-  });
+  readonly monthNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
   readonly stats = computed(() => {
     this.language.lang();
@@ -82,13 +77,50 @@ export class DashboardPage {
     return Math.round((s.paidCount / total) * 100);
   });
 
+  /** Months in the calendar year for the grid. */
+  readonly calendarMonths = computed(() => {
+    this.language.lang();
+    const year = this.calendarYear();
+    const selected = this.selectedMonthId();
+    const now = new Date();
+    const currentId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    return this.monthNumbers.map((month) => {
+      const id = `${year}-${String(month).padStart(2, '0')}`;
+      return {
+        id,
+        month,
+        shortLabel: this.transloco.translate(`months.${month}`),
+        selected: selected === id,
+        isCurrent: currentId === id,
+      };
+    });
+  });
+
   selectMonth(monthId: string): void {
     this.store.ensureMonth(monthId);
     this.selectedMonthId.set(monthId);
+    this.calendarYear.set(Number(monthId.slice(0, 4)));
     this.monthPickerOpen.set(false);
   }
 
-  /** Move one calendar month (creates shell if needed). */
+  pickCalendarMonth(month: number): void {
+    const year = this.calendarYear();
+    this.selectMonth(`${year}-${String(month).padStart(2, '0')}`);
+  }
+
+  shiftCalendarYear(delta: number): void {
+    this.calendarYear.update((y) => y + delta);
+  }
+
+  goToCurrentMonth(): void {
+    const now = new Date();
+    this.selectMonth(
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+    );
+  }
+
+  /** Move selected month by one calendar month. */
   shiftMonth(delta: number): void {
     const id = this.selectedMonthId();
     let year = Number(id.slice(0, 4));
@@ -105,6 +137,9 @@ export class DashboardPage {
   }
 
   toggleMonthPicker(): void {
+    if (!this.monthPickerOpen()) {
+      this.calendarYear.set(Number(this.selectedMonthId().slice(0, 4)));
+    }
     this.monthPickerOpen.update((open) => !open);
   }
 

@@ -323,6 +323,26 @@
           </button>
         </div>
 
+        <!-- Month scope: all months or one month -->
+        <div class="border-b border-slate-100 px-5 py-3 dark:border-white/[0.06]">
+          <label class="block">
+            <span class="ui-label">{{ 'residents.historyFilterMonth' | transloco }}</span>
+            <select
+              class="ui-input"
+              [value]="historyMonthFilter()"
+              (change)="setHistoryMonthFilter($any($event.target).value)"
+            >
+              <option value="all">{{ 'residents.historyAllMonths' | transloco }}</option>
+              @for (month of historyMonthOptions(); track month.id) {
+                <option [value]="month.id">{{ month.label }}</option>
+              }
+            </select>
+          </label>
+          <p class="mt-1.5 text-xs text-slate-500 dark:text-zinc-500">
+            {{ 'residents.historyFilterHint' | transloco }}
+          </p>
+        </div>
+
         <div class="grid grid-cols-2 gap-2 border-b border-slate-100 px-5 py-3 sm:grid-cols-4 dark:border-white/[0.06]">
           <div class="rounded-xl bg-slate-50 px-3 py-2 dark:bg-[#12151c]">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
@@ -359,9 +379,16 @@
         </div>
 
         <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          @if (paymentHistory().length === 0) {
+          @if (allPaymentHistory().length === 0) {
             <div class="ui-empty py-10">
               <p class="text-sm text-slate-600 dark:text-zinc-500">{{ 'residents.historyEmpty' | transloco }}</p>
+            </div>
+          } @else if (paymentHistory().length === 0) {
+            <div class="ui-empty py-10">
+              <p class="text-sm text-slate-600 dark:text-zinc-500">{{ 'residents.historyEmptyMonth' | transloco }}</p>
+              <button type="button" (click)="setHistoryMonthFilter('all')" class="ui-btn-secondary mt-3 ui-btn-sm">
+                {{ 'residents.historyAllMonths' | transloco }}
+              </button>
             </div>
           } @else {
             <ul class="space-y-2">

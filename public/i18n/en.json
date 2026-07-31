@@ -116,7 +116,11 @@
     "monthHistoryHint": "Switch months to review past collection and spending",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
-    "pickMonth": "Choose month"
+    "prevYear": "Previous year",
+    "nextYear": "Next year",
+    "pickMonth": "Choose month from calendar",
+    "calendarTitle": "Pick a month",
+    "thisMonth": "This month"
   },
   "residents": {
     "eyebrow": "People",
@@ -151,7 +155,11 @@
     "historyTitle": "Payment history — {{name}}",
     "historyMonths": "Months",
     "historyCollected": "Collected",
-    "historyEmpty": "No payment records yet for this resident."
+    "historyEmpty": "No payment records yet for this resident.",
+    "historyEmptyMonth": "No payments for this month.",
+    "historyFilterMonth": "Show months",
+    "historyAllMonths": "All months",
+    "historyFilterHint": "View every month or focus on one month only."
   },
   "payments": {
     "eyebrow": "Collections",

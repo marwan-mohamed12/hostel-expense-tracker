@@ -318,7 +318,7 @@ Treat these as **done** unless asked to change them:
    - Only **paid** amounts reduce balance; unpaid totals shown separately
 
 4. **Dashboard (home)**
-   - **Month navigator** — compact prev / label / next control in the header; click label for a month dropdown; stats / unpaid list / recent expenses follow selection
+   - **Month navigator** — prev / label / next in the header; click label opens a **year + 12-month calendar grid** (pick any month); stats / unpaid list / recent expenses follow selection
    - Paid / not paid (selected month)
    - Collected (selected month)
    - Paid expenses (selected month) + unpaid note when applicable
@@ -329,7 +329,8 @@ Treat these as **done** unless asked to change them:
 
 4b. **Resident payment history**
    - From Residents list: **History** opens a panel for that resident
-   - Shows all months’ payment rows (status, amount, paid date, notes) + summary counts/collected
+   - Filter: **All months** or a **specific month** (dropdown of months that have records)
+   - Shows payment rows (status, amount, paid date, notes) + summary counts/collected for the filter
 
 5. **Setup**
    - SSR removed; client-only SPA

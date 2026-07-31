@@ -116,7 +116,11 @@
     "monthHistoryHint": "بدّل الشهر عشان تشوف التحصيل والصرف القديم",
     "prevMonth": "الشهر اللي فات",
     "nextMonth": "الشهر الجاي",
-    "pickMonth": "اختار الشهر"
+    "prevYear": "السنة اللي فاتت",
+    "nextYear": "السنة الجاية",
+    "pickMonth": "اختار الشهر من التقويم",
+    "calendarTitle": "اختار شهر",
+    "thisMonth": "الشهر ده"
   },
   "residents": {
     "eyebrow": "الناس",
@@ -151,7 +155,11 @@
     "historyTitle": "سجل التحصيل — {{name}}",
     "historyMonths": "شهور",
     "historyCollected": "اللي اتجمع",
-    "historyEmpty": "مفيش سجلات تحصيل للساكن ده لسه."
+    "historyEmpty": "مفيش سجلات تحصيل للساكن ده لسه.",
+    "historyEmptyMonth": "مفيش تحصيل للشهر ده.",
+    "historyFilterMonth": "اعرض الشهور",
+    "historyAllMonths": "كل الشهور",
+    "historyFilterHint": "شوف كل الشهور أو شهر واحد بس."
   },
   "payments": {
     "eyebrow": "الفلوس الداخلة",
