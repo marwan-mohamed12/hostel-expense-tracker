@@ -11,7 +11,8 @@
     "expenses": "المصاريف",
     "mainAria": "القائمة الرئيسية",
     "mobileAria": "قائمة الموبايل",
-    "toggleMenu": "افتح أو اقفل القائمة"
+    "toggleMenu": "افتح أو اقفل القائمة",
+    "homeAria": "روح للصفحة الرئيسية"
   },
   "lang": {
     "switchTo": "ع",

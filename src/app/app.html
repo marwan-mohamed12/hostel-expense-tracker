@@ -3,9 +3,13 @@
     class="sticky top-0 z-40 border-b border-white/60 bg-white/80 shadow-[0_1px_0_rgb(15_23_42_/_0.04)] backdrop-blur-xl dark:border-white/[0.06] dark:bg-black/90 dark:shadow-[0_1px_0_rgb(0_0_0_/_0.8)]"
   >
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-      <div class="flex min-w-0 items-center gap-3">
+      <a
+        routerLink="/"
+        class="group flex min-w-0 items-center gap-3 rounded-2xl outline-offset-2 transition hover:opacity-90"
+        [attr.aria-label]="'nav.homeAria' | transloco"
+      >
         <div
-          class="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 to-brand-800 text-sm font-extrabold tracking-tight text-white shadow-md shadow-brand-600/30"
+          class="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 to-brand-800 text-sm font-extrabold tracking-tight text-white shadow-md shadow-brand-600/30 transition group-hover:shadow-lg group-hover:shadow-brand-600/35"
           aria-hidden="true"
         >
           <span class="relative z-10">HE</span>
@@ -22,7 +26,7 @@
             {{ 'app.title' | transloco }}
           </h1>
         </div>
-      </div>
+      </a>
 
       <div class="flex items-center gap-2">
         <!-- Desktop nav -->

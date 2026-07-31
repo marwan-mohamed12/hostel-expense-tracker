@@ -11,7 +11,8 @@
     "expenses": "Expenses",
     "mainAria": "Main",
     "mobileAria": "Mobile",
-    "toggleMenu": "Toggle navigation menu"
+    "toggleMenu": "Toggle navigation menu",
+    "homeAria": "Go to homepage"
   },
   "lang": {
     "switchTo": "ع",
