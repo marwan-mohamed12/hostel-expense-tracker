@@ -36,22 +36,29 @@ export class ExpensesPage {
       .reduce((sum, expense) => sum + expense.amount, 0),
   );
 
-  readonly form = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.minLength(2)]],
-    category: [EXPENSE_CATEGORIES[0] as string, Validators.required],
-    amount: [0, [Validators.required, Validators.min(0.01)]],
-    date: [new Date().toISOString().slice(0, 10), Validators.required],
-    description: [''],
-    addedBy: ['', [Validators.required, Validators.minLength(2)]],
-    paid: [true],
+  readonly form = this.fb.group({
+    title: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
+    category: this.fb.nonNullable.control(EXPENSE_CATEGORIES[0] as string, Validators.required),
+    // null (empty) by default — 0 fails min(0.01) and previously blocked save with no feedback
+    amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
+    date: this.fb.nonNullable.control(new Date().toISOString().slice(0, 10), Validators.required),
+    description: this.fb.nonNullable.control(''),
+    addedBy: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
+    paid: this.fb.nonNullable.control(true),
   });
+
+  /** True when a control is invalid and the user has interacted with it (or submit was attempted). */
+  fieldInvalid(name: 'title' | 'category' | 'amount' | 'date' | 'addedBy'): boolean {
+    const control = this.form.controls[name];
+    return control.invalid && (control.touched || control.dirty);
+  }
 
   openCreate(): void {
     this.editingId.set(null);
     this.form.reset({
       title: '',
       category: EXPENSE_CATEGORIES[0],
-      amount: 0,
+      amount: null,
       date: new Date().toISOString().slice(0, 10),
       description: '',
       addedBy: '',
@@ -82,18 +89,19 @@ export class ExpensesPage {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.toast.error(this.transloco.translate('expenses.formInvalidToast'));
       return;
     }
 
     const value = this.form.getRawValue();
     const payload = {
-      title: value.title,
+      title: value.title.trim(),
       category: value.category,
-      amount: value.amount,
+      amount: Number(value.amount),
       date: value.date,
-      description: value.description,
-      addedBy: value.addedBy,
-      paid: value.paid,
+      description: (value.description ?? '').trim(),
+      addedBy: value.addedBy.trim(),
+      paid: value.paid !== false,
     };
 
     const editingId = this.editingId();
