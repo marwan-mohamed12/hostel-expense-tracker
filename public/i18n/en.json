@@ -6,6 +6,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "statistics": "Statistics",
     "residents": "Residents",
     "payments": "Payments",
     "expenses": "Expenses",
@@ -122,10 +123,14 @@
     "pickMonth": "Choose month from calendar",
     "calendarTitle": "Pick a month",
     "thisMonth": "This month",
-    "statsEyebrow": "Analytics",
-    "statsTitle": "Statistics",
-    "statsHint": "Monthly spending, collection health, top categories, and how balance changes over time.",
-    "statsEmpty": "No history yet. Record payments and paid expenses to see charts.",
+    "viewStatistics": "Statistics"
+  },
+  "statistics": {
+    "eyebrow": "Analytics",
+    "title": "Statistics",
+    "hint": "Monthly spending, collection health, top categories, and how balance changes over time.",
+    "empty": "No history yet. Record payments and paid expenses to see charts.",
+    "backToDashboard": "Back to dashboard",
     "chartMonthlyExpenses": "Monthly expenses",
     "chartMonthlyExpensesHint": "Paid expenses only (EGP)",
     "chartCollectionRate": "Collection rate",
