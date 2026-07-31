@@ -1,4 +1,26 @@
-﻿:host {
+:host {
   display: block;
   min-height: 100dvh;
+}
+
+/* Route content entrance (subtle) */
+:host ::ng-deep router-outlet + * {
+  animation: page-in 0.35s ease-out;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host ::ng-deep router-outlet + * {
+    animation: none;
+  }
 }

@@ -72,13 +72,30 @@ export class PaymentsPage {
     const list = this.rows();
     const paid = list.filter((row) => row.paid);
     const unpaid = list.filter((row) => !row.paid);
+    const collected = paid.reduce((sum, row) => sum + row.amount, 0);
+    const expected = list.reduce((sum, row) => sum + row.amount, 0);
+    const total = paid.length + unpaid.length;
     return {
       paidCount: paid.length,
       unpaidCount: unpaid.length,
-      collected: paid.reduce((sum, row) => sum + row.amount, 0),
-      expected: list.reduce((sum, row) => sum + row.amount, 0),
+      collected,
+      expected,
+      progressPercent: total === 0 ? 0 : Math.round((paid.length / total) * 100),
+      amountProgressPercent:
+        expected === 0 ? 0 : Math.min(100, Math.round((collected / expected) * 100)),
     };
   });
+
+  initials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) {
+      return '?';
+    }
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
 
   selectMonth(monthId: string): void {
     this.store.ensureMonth(monthId);

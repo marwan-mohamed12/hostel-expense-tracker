@@ -28,6 +28,7 @@ export class DashboardPage {
 
   readonly months = this.store.monthsNewestFirst;
   readonly recentExpenses = computed(() => this.store.expensesNewestFirst().slice(0, 5));
+
   readonly unpaidPayments = computed(() => {
     const monthId = this.stats().monthId;
     const activeIds = new Set(this.store.activeResidents().map((resident) => resident.id));
@@ -40,4 +41,24 @@ export class DashboardPage {
       }));
   });
 
+  /** Share of active residents paid this month (0–100). */
+  readonly paidProgress = computed(() => {
+    const s = this.stats();
+    const total = s.paidCount + s.unpaidCount;
+    if (total === 0) {
+      return 0;
+    }
+    return Math.round((s.paidCount / total) * 100);
+  });
+
+  initials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) {
+      return '?';
+    }
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
+}

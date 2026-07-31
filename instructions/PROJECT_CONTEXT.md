@@ -296,13 +296,14 @@ Treat these as **done** unless asked to change them:
    - Paid / not paid (month)
    - Collected (month)
    - Paid expenses (month) + unpaid note when applicable
-   - Current balance (all-time collected − all-time **paid** expenses)
-   - Unpaid list + recent expenses (with unpaid badge) + all-time totals
-   - Header context chips under “Dashboard”: solid teal **month** badge (e.g. July 2026) + soft teal **active residents** badge (not plain muted subtitle text)
+   - Current balance (all-time collected − all-time **paid** expenses) — **hero gradient card**
+   - Month collection progress bar (% of active residents paid)
+   - Unpaid list (with initials avatars) + recent expenses + all-time totals
+   - Header context chips: solid brand **month** badge + soft **active residents** badge
 
 5. **Setup**
    - SSR removed; client-only SPA
-   - Tailwind styling for shell + pages
+   - Tailwind 4 + design-system utilities in `src/styles.css`
 
 6. **Localization (EN + AR)**
    - Runtime i18n via Transloco; header language toggle
@@ -316,11 +317,12 @@ Treat these as **done** unless asked to change them:
 
 1. **ALWAYS work on the main repo `F:\grok\hostel-expense-tracker` — never only on a Grok worktree.** See “CRITICAL: Always work on the main repo” above. The user runs `ng serve` from the main repo; worktree-only edits will not show up.
 2. Prefer **small, focused changes** that match existing patterns (standalone components, signals, Tailwind utility classes, `HostelStore`).
-3. Keep UI consistent with current design:
-   - Teal accent (`teal-600`)
-   - Slate neutrals
-   - Rounded cards (`rounded-2xl`), soft borders/shadows
-   - **Mobile (< md):** burger nav + card lists; **Desktop (md+):** horizontal nav + data tables
+3. Keep UI consistent with the current design system (`src/styles.css`):
+   - Brand teal via Tailwind theme tokens (`brand-50`…`brand-900`, primary actions `brand-600`)
+   - Soft mint canvas background + ambient gradient orbs on `body`
+   - Shared utilities: `.ui-card`, `.ui-btn-primary`, `.ui-input`, `.ui-chip`, `.ui-badge-*`, `.ui-empty`, `.ui-avatar`, `.ui-progress`
+   - Font: **Plus Jakarta Sans** (loaded in `index.html`)
+   - **Mobile (< md):** burger nav + card lists; **Desktop (md+):** pill nav + data tables
 4. Prefer **SweetAlert2** for destructive confirmations and **angular-toastify** (`ToastService`) for success/action feedback — never native `alert` / `confirm`. One short sentence per toast.
 5. Do **not** reintroduce SSR unless the user asks.
 6. Do **not** add a backend unless the user asks; localStorage is intentional for v1.
@@ -370,6 +372,8 @@ These are optional next steps, not commitments:
 14. **Unpaid expenses:** expenses have a `paid` flag. Unpaid expenses are tracked but **do not** subtract from balance left. Form checkbox + mark paid/unpaid actions; storage migrates missing `paid` → `true`.
 15. **i18n (Transloco):** English + Arabic runtime localization for the entire UI; language preference in localStorage; RTL for Arabic; month/category labels localized at display time.
 16. **Toast notifications:** first shipped with ngx-toastr (#7 / PR #8); later replaced with **angular-toastify** (PR follow-up) for cleaner React-Toastify-style UI and **one-sentence** messages only.
+17. **UI/UX redesign (soft ledger):** Plus Jakarta Sans, brand teal tokens, ambient canvas, glass sticky header with pill nav, dashboard balance hero + collection progress, payment progress bar, resident initials avatars, refined empty states with CTAs, shared `.ui-*` component classes for consistency.
+18. **Dark mode:** `ThemeService` (`light` | `dark` | `system`), preference key `hostel-expense-tracker-theme` in localStorage; FOUC-safe boot script in `index.html`; header icon cycles light → dark → system; Tailwind `@custom-variant dark` on `html.dark`; SweetAlert dark styles.
 
 ---
 
@@ -390,6 +394,7 @@ These are optional next steps, not commitments:
 - `src/app/core/constants/app.constants.ts` — defaults/categories/storage key
 - `src/app/core/utils/swal-dialog.ts` — shared SweetAlert2 destructive confirm helpers
 - `src/app/core/services/toast.service.ts` — angular-toastify wrapper (single-sentence success/info/error)
+- `src/app/core/services/theme.service.ts` — light/dark/system theme preference + `html.dark`
 - `src/app/core/i18n/language.service.ts` — language preference, RTL, month/category formatting
 - `src/app/core/i18n/transloco-loader.ts` — translation file loader
 - `public/i18n/en.json`, `public/i18n/ar.json` — UI translation dictionaries
@@ -400,8 +405,8 @@ These are optional next steps, not commitments:
 - `src/app/pages/payments/*`
 - `src/app/pages/expenses/*`
 - `package.json`, `angular.json` — SPA build (no SSR entries); SweetAlert2 CommonJS allowlist
-- `src/styles.css` — Tailwind + SweetAlert2 CSS imports (angular-toastify styles are component-scoped)
+- `src/styles.css` — Tailwind 4 theme tokens, ambient canvas, shared `.ui-*` utilities, SweetAlert2 CSS (angular-toastify styles are component-scoped)
 
 ---
 
-*Last updated: angular-toastify one-line action toasts + SweetAlert2 confirms; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: dark mode (light/dark/system + FOUC-safe boot); UI/UX redesign; angular-toastify + SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*

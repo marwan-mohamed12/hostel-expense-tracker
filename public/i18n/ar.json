@@ -18,6 +18,11 @@
     "switchToEn": "EN",
     "aria": "غيّر اللغة"
   },
+  "theme": {
+    "ariaLight": "الوضع: فاتح. اضغط للوضع الداكن",
+    "ariaDark": "الوضع: داكن. اضغط لوضع النظام",
+    "ariaSystem": "الوضع: حسب النظام. اضغط للفاتح"
+  },
   "common": {
     "cancel": "إلغاء",
     "edit": "عدّل",
@@ -103,7 +108,9 @@
     "unpaidThisMonth": "لسه مادفعوش الشهر ده",
     "everyonePaid": "كلهم دفعوا عن {{month}}.",
     "recentExpenses": "آخر مصاريف",
-    "noExpenses": "مفيش مصاريف متسجّلة لسه."
+    "noExpenses": "مفيش مصاريف متسجّلة لسه.",
+    "collectionProgress": "تحصيل الشهر",
+    "ofResidentsPaid": "{{paid}} من {{total}} ساكن دفعوا"
   },
   "residents": {
     "eyebrow": "الناس",
@@ -112,6 +119,7 @@
     "addResident": "ضيف ساكن",
     "editResident": "عدّل ساكن",
     "newResident": "ساكن جديد",
+    "formHint": "الرسوم ممكن تختلف من ساكن للتاني.",
     "nameRequired": "الاسم *",
     "namePlaceholder": "الاسم كامل",
     "phonePlaceholder": "01xxxxxxxxx",
@@ -119,8 +127,10 @@
     "monthlyFeeRequired": "الرسوم الشهرية (ج.م) *",
     "monthlyFee": "الرسوم الشهرية",
     "activeResident": "ساكن شغّال",
+    "activeHint": "السكان الشغّالين بس اللي بيظهروا في متابعة التحصيل الشهري.",
     "notesPlaceholder": "ملاحظات لو حابب",
     "empty": "مفيش سكان لسه. ضيف أول ساكن عشان تبدأ.",
+    "count": "{{count}} ظاهر",
     "activate": "فعّله",
     "deactivate": "وقّفه",
     "removeTitle": "تشيل {{name}}؟",
@@ -144,6 +154,8 @@
     "unpaid": "لسه",
     "collected": "اللي اتجمع",
     "expectedTotal": "المتوقع كله",
+    "collectionProgress": "نسبة التحصيل",
+    "ofExpected": "{{collected}} من {{expected}} المتوقع",
     "monthPayments": "تحصيل {{month}}",
     "deleteMonth": "امسح الشهر",
     "deleteMonthTitle": "امسح الشهر ده وسجلات تحصيله",
