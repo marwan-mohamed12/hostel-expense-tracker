@@ -18,6 +18,11 @@
     "switchToEn": "EN",
     "aria": "Switch language"
   },
+  "theme": {
+    "ariaLight": "Theme: light. Click for dark mode",
+    "ariaDark": "Theme: dark. Click for system",
+    "ariaSystem": "Theme: system. Click for light mode"
+  },
   "common": {
     "cancel": "Cancel",
     "edit": "Edit",
@@ -103,7 +108,9 @@
     "unpaidThisMonth": "Unpaid this month",
     "everyonePaid": "Everyone is paid for {{month}}.",
     "recentExpenses": "Recent expenses",
-    "noExpenses": "No expenses recorded yet."
+    "noExpenses": "No expenses recorded yet.",
+    "collectionProgress": "Month collection",
+    "ofResidentsPaid": "{{paid}} of {{total}} residents paid"
   },
   "residents": {
     "eyebrow": "People",
@@ -112,6 +119,7 @@
     "addResident": "Add resident",
     "editResident": "Edit resident",
     "newResident": "New resident",
+    "formHint": "Fees can differ per resident.",
     "nameRequired": "Name *",
     "namePlaceholder": "Full name",
     "phonePlaceholder": "01xxxxxxxxx",
@@ -119,8 +127,10 @@
     "monthlyFeeRequired": "Monthly fee (EGP) *",
     "monthlyFee": "Monthly fee",
     "activeResident": "Active resident",
+    "activeHint": "Only active residents appear in monthly payment tracking.",
     "notesPlaceholder": "Optional notes",
     "empty": "No residents yet. Add the first resident to get started.",
+    "count": "{{count}} shown",
     "activate": "Activate",
     "deactivate": "Deactivate",
     "removeTitle": "Remove {{name}}?",
@@ -144,6 +154,8 @@
     "unpaid": "Unpaid",
     "collected": "Collected",
     "expectedTotal": "Expected total",
+    "collectionProgress": "Collection progress",
+    "ofExpected": "{{collected}} of {{expected}} expected",
     "monthPayments": "{{month}} payments",
     "deleteMonth": "Delete month",
     "deleteMonthTitle": "Delete this month and its payment records",

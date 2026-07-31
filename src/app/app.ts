@@ -4,6 +4,7 @@ import { AngularToastifyModule } from 'angular-toastify';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 import { LanguageService } from './core/i18n/language.service';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,7 @@ import { LanguageService } from './core/i18n/language.service';
 export class App {
   private readonly router = inject(Router);
   readonly language = inject(LanguageService);
+  readonly theme = inject(ThemeService);
 
   /** Corner for toast container (start edge in RTL). */
   readonly toastPosition = computed(() =>
@@ -21,6 +23,17 @@ export class App {
   );
 
   readonly menuOpen = signal(false);
+
+  readonly themeAriaKey = computed(() => {
+    const pref = this.theme.preference();
+    if (pref === 'dark') {
+      return 'theme.ariaDark';
+    }
+    if (pref === 'system') {
+      return 'theme.ariaSystem';
+    }
+    return 'theme.ariaLight';
+  });
 
   readonly navItems = [
     { path: '/', labelKey: 'nav.dashboard', exact: true },
@@ -45,5 +58,9 @@ export class App {
 
   switchLanguage(): void {
     this.language.toggle();
+  }
+
+  cycleTheme(): void {
+    this.theme.cycle();
   }
 }
