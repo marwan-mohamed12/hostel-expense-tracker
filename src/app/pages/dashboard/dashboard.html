@@ -492,4 +492,221 @@
       }
     </article>
   </div>
+
+  <!-- Phase 3: Statistics charts -->
+  <div class="space-y-4">
+    <div>
+      <p class="ui-eyebrow">{{ 'dashboard.statsEyebrow' | transloco }}</p>
+      <h2 class="ui-title text-xl sm:text-2xl">{{ 'dashboard.statsTitle' | transloco }}</h2>
+      <p class="ui-text-muted mt-1 max-w-2xl text-sm">{{ 'dashboard.statsHint' | transloco }}</p>
+    </div>
+
+    @if (!hasMonthlyCharts() && !hasCategoryChart()) {
+      <div class="ui-empty py-10">
+        <p class="ui-text-muted text-sm">{{ 'dashboard.statsEmpty' | transloco }}</p>
+        <div class="mt-3 flex flex-wrap justify-center gap-2">
+          <a routerLink="/payments" class="ui-btn-primary ui-btn-sm">{{ 'dashboard.trackPayments' | transloco }}</a>
+          <a routerLink="/expenses" class="ui-btn-secondary ui-btn-sm">{{ 'dashboard.addExpense' | transloco }}</a>
+        </div>
+      </div>
+    } @else {
+      @for (mount of [chartMountKey()]; track mount) {
+        <div class="grid gap-4 lg:grid-cols-2">
+          <!-- Monthly expenses -->
+          <article class="ui-card p-5">
+            <h3 class="ui-section-title">{{ 'dashboard.chartMonthlyExpenses' | transloco }}</h3>
+            <p class="ui-text-muted mt-1 text-xs">{{ 'dashboard.chartMonthlyExpensesHint' | transloco }}</p>
+            @if (hasMonthlyCharts()) {
+              <div class="mt-2 min-h-[260px]">
+                <apx-chart
+                  [series]="expensesSeries()"
+                  [chart]="expensesChart()"
+                  [xaxis]="expensesXaxis()"
+                  [yaxis]="moneyYaxis()"
+                  [colors]="expensesColors"
+                  [stroke]="expensesStroke()"
+                  [plotOptions]="barPlotOptions()"
+                  [dataLabels]="dataLabelsOff()"
+                  [grid]="chartGrid()"
+                  [tooltip]="moneyTooltip()"
+                  [legend]="chartLegend()"
+                />
+              </div>
+            } @else {
+              <p class="ui-text-muted mt-6 text-center text-sm">{{ 'dashboard.chartNoData' | transloco }}</p>
+            }
+          </article>
+
+          <!-- Collection rate -->
+          <article class="ui-card p-5">
+            <h3 class="ui-section-title">{{ 'dashboard.chartCollectionRate' | transloco }}</h3>
+            <p class="ui-text-muted mt-1 text-xs">{{ 'dashboard.chartCollectionRateHint' | transloco }}</p>
+            @if (hasMonthlyCharts()) {
+              <div class="mt-2 min-h-[260px]">
+                <apx-chart
+                  [series]="collectionSeries()"
+                  [chart]="collectionChart()"
+                  [xaxis]="collectionXaxis()"
+                  [yaxis]="percentYaxis()"
+                  [colors]="collectionColors"
+                  [stroke]="collectionStroke()"
+                  [dataLabels]="dataLabelsOff()"
+                  [grid]="chartGrid()"
+                  [tooltip]="percentTooltip()"
+                  [legend]="chartLegend()"
+                />
+              </div>
+            } @else {
+              <p class="ui-text-muted mt-6 text-center text-sm">{{ 'dashboard.chartNoData' | transloco }}</p>
+            }
+          </article>
+
+          <!-- Biggest categories -->
+          <article class="ui-card p-5">
+            <h3 class="ui-section-title">{{ 'dashboard.chartCategories' | transloco }}</h3>
+            <p class="ui-text-muted mt-1 text-xs">{{ 'dashboard.chartCategoriesHint' | transloco }}</p>
+            @if (hasCategoryChart()) {
+              <div class="mt-2 min-h-[280px]">
+                <apx-chart
+                  [series]="categorySeries()"
+                  [chart]="categoryChart()"
+                  [labels]="categoryLabels()"
+                  [colors]="categoryColors"
+                  [plotOptions]="donutPlotOptions()"
+                  [dataLabels]="dataLabelsOff()"
+                  [legend]="chartLegend()"
+                  [tooltip]="moneyTooltip()"
+                />
+              </div>
+            } @else {
+              <p class="ui-text-muted mt-6 text-center text-sm">{{ 'dashboard.chartNoData' | transloco }}</p>
+            }
+          </article>
+
+          <!-- Remaining balance trend -->
+          <article class="ui-card p-5">
+            <h3 class="ui-section-title">{{ 'dashboard.chartBalanceTrend' | transloco }}</h3>
+            <p class="ui-text-muted mt-1 text-xs">{{ 'dashboard.chartBalanceTrendHint' | transloco }}</p>
+            @if (hasMonthlyCharts()) {
+              <div class="mt-2 min-h-[260px]">
+                <apx-chart
+                  [series]="balanceSeries()"
+                  [chart]="balanceChart()"
+                  [xaxis]="balanceXaxis()"
+                  [yaxis]="moneyYaxis()"
+                  [colors]="balanceColors"
+                  [stroke]="balanceStroke()"
+                  [fill]="balanceFill()"
+                  [dataLabels]="dataLabelsOff()"
+                  [grid]="chartGrid()"
+                  [tooltip]="moneyTooltip()"
+                  [legend]="chartLegend()"
+                />
+              </div>
+            } @else {
+              <p class="ui-text-muted mt-6 text-center text-sm">{{ 'dashboard.chartNoData' | transloco }}</p>
+            }
+          </article>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Phase 3: Balance timeline -->
+  <article class="ui-card p-5 sm:p-6">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 class="ui-section-title">{{ 'dashboard.timelineTitle' | transloco }}</h2>
+        <p class="ui-text-muted mt-1 text-xs sm:text-sm">{{ 'dashboard.timelineHint' | transloco }}</p>
+      </div>
+      @if (hasTimeline()) {
+        <span class="ui-badge ui-badge-brand">
+          {{ 'dashboard.timelineCount' | transloco: { count: balanceTimeline().length } }}
+        </span>
+      }
+    </div>
+
+    @if (!hasTimeline()) {
+      <div class="ui-empty mt-4 border-0 py-8 shadow-none dark:bg-black/40">
+        <p class="ui-text-muted text-sm">{{ 'dashboard.timelineEmpty' | transloco }}</p>
+      </div>
+    } @else {
+      <ol class="relative mt-6 space-y-0 border-s-2 border-brand-200 ps-5 dark:border-brand-800/60">
+        @for (event of balanceTimeline(); track event.id) {
+          <li class="relative pb-5 last:pb-0">
+            <span
+              class="absolute -start-[1.4rem] top-1.5 flex size-3.5 items-center justify-center rounded-full ring-4 ring-white dark:ring-[#0a0c10]"
+              [class]="
+                event.type === 'payment'
+                  ? 'bg-emerald-500'
+                  : 'bg-rose-500'
+              "
+              aria-hidden="true"
+            ></span>
+            <div
+              class="flex flex-col gap-2 rounded-2xl bg-slate-50/80 px-3.5 py-3 ring-1 ring-inset ring-slate-100 sm:flex-row sm:items-center sm:justify-between dark:bg-white/[0.03] dark:ring-white/[0.06]"
+            >
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span
+                    class="ui-badge !px-1.5 !py-0.5"
+                    [class]="
+                      event.type === 'payment'
+                        ? 'ui-badge-success'
+                        : 'ui-badge-warn'
+                    "
+                  >
+                    {{
+                      event.type === 'payment'
+                        ? ('dashboard.timelineIn' | transloco)
+                        : ('dashboard.timelineOut' | transloco)
+                    }}
+                  </span>
+                  <time class="ui-text-muted text-xs tabular-nums" [attr.datetime]="event.date">
+                    {{ event.date | date: 'mediumDate' }}
+                  </time>
+                </div>
+                <p class="ui-text-secondary mt-1 truncate text-sm font-semibold">{{ event.title }}</p>
+                @if (event.meta) {
+                  <p class="ui-text-muted mt-0.5 text-xs">
+                    @if (event.type === 'expense') {
+                      {{ categoryLabel(event.meta) }}
+                    } @else {
+                      {{ formatMonthId(event.meta) }}
+                    }
+                  </p>
+                }
+              </div>
+              <div class="flex shrink-0 flex-wrap items-end gap-4 sm:flex-col sm:items-end sm:gap-1">
+                <p
+                  class="text-sm font-bold tabular-nums"
+                  [class]="
+                    event.signedAmount >= 0
+                      ? 'text-emerald-700 dark:text-emerald-300'
+                      : 'text-rose-700 dark:text-rose-300'
+                  "
+                >
+                  {{ event.signedAmount >= 0 ? '+' : '−'
+                  }}{{ event.amount | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+                </p>
+                <p class="ui-text-muted text-xs">
+                  {{ 'dashboard.timelineRunning' | transloco }}
+                  <span
+                    class="ms-1 font-semibold tabular-nums"
+                    [class]="
+                      event.runningBalance >= 0
+                        ? 'text-brand-800 dark:text-brand-200'
+                        : 'text-rose-700 dark:text-rose-300'
+                    "
+                  >
+                    {{ event.runningBalance | currency: 'EGP':'symbol-narrow':'1.0-2' }}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </li>
+        }
+      </ol>
+    }
+  </article>
 </section>

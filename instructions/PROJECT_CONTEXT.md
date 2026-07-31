@@ -92,13 +92,21 @@ Every expense record must include:
 | Persistence | **localStorage** | Client-side for v1; no backend yet |
 | State | **HostelStore** service + Angular signals | Single source of truth in the app |
 | i18n | **@jsverse/transloco** (runtime) | EN + AR; runtime language switch; RTL for Arabic |
+| Charts / statistics | **ApexCharts** via `ng-apexcharts` | Phase 3 dashboard analytics |
 | Tests | Vitest (`ng test`) | |
 | Package manager | npm | |
+
+### Charts (ApexCharts) notes
+- Packages: `apexcharts`, `ng-apexcharts` (standalone `ChartComponent` / `<apx-chart>`).
+- Allowed as CommonJS in `angular.json` → `allowedCommonJsDependencies: ["sweetalert2", "apexcharts"]`.
+- Dynamic import of `apexcharts/client` (no `scripts[]` entry required for modern Angular builds).
+- Dashboard charts remount via `@for (mount of [chartMountKey()]; track mount)` so theme/lang/data changes rebuild the chart.
+- Store aggregations: `getMonthlyChartSeries`, `getCategoryBreakdown`, `getBalanceTimeline`.
 
 ### SweetAlert2 notes
 - Package: `sweetalert2` (listed in `package.json`).
 - Global CSS imported in `src/styles.css` via `@import 'sweetalert2/dist/sweetalert2.min.css'`.
-- Allowed as CommonJS in `angular.json` → `allowedCommonJsDependencies: ["sweetalert2"]`.
+- Allowed as CommonJS in `angular.json` (with ApexCharts): `allowedCommonJsDependencies: ["sweetalert2", "apexcharts"]`.
 - Shared helpers: `src/app/core/utils/swal-dialog.ts`
   - `confirmDelete({ title, text?, html?, confirmButtonText?, cancelButtonText? })` → `Promise<boolean>`
 - **Used for all destructive confirms:** delete month (Payments), remove resident (Residents), delete expense (Expenses).
@@ -380,7 +388,7 @@ Treat these as **done** unless asked to change them:
 These are optional next steps, not commitments:
 
 - Export / import JSON backup of localStorage data
-- Better statistics (charts by month/category) — Phase 2 lays filter foundations
+- ~~Better statistics (charts by month/category)~~ — **done in Phase 3**
 - Multi-month comparison reports
 - Text search on expenses and residents
 - Edit payment history validation rules
@@ -419,6 +427,7 @@ These are optional next steps, not commitments:
 21. **Resident history calendar filter:** replaced the month `<select>` in payment history with a year + 12-month calendar grid; multi-select months (toggle); activity months marked with a dot; **All months** / **Unselect all** clear selection.
 22. **Custom toasts:** removed `angular-toastify`; in-house `ToastService` + `app-toast-host` matching soft-ledger design (success/info/error, dark mode, RTL).
 23. **Shared month calendar picker** (`app-month-calendar-picker`): expenses month filter (desktop + mobile dialog) uses calendar icon → year/month grid with activity dots instead of `<select>`.
+24. **Phase 3 — statistics & balance timeline:** ApexCharts on Dashboard (monthly expenses bar, collection rate line, category donut, balance area trend) + chronological balance timeline (paid payments in / paid expenses out with running balance). Store helpers and EN/AR copy. Issue #19.
 
 ---
 
@@ -452,9 +461,9 @@ These are optional next steps, not commitments:
 - `src/app/pages/residents/*`
 - `src/app/pages/payments/*`
 - `src/app/pages/expenses/*`
-- `package.json`, `angular.json` — SPA build (no SSR entries); SweetAlert2 CommonJS allowlist
+- `package.json`, `angular.json` — SPA build (no SSR entries); SweetAlert2 + ApexCharts CommonJS allowlist
 - `src/styles.css` — Tailwind 4 theme tokens, ambient canvas, shared `.ui-*` utilities, SweetAlert2 CSS
 
 ---
 
-*Last updated: Custom toasts (no angular-toastify); resident history multi-select calendar; Phase 2 filters/navigators; user journey; dark mode; UI/UX redesign; SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: Phase 3 (ApexCharts statistics + balance timeline on Dashboard, issue #19); custom toasts (no angular-toastify); resident history multi-select calendar; Phase 2 filters/navigators; user journey; dark mode; UI/UX redesign; SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
