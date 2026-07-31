@@ -20,19 +20,37 @@ export class DashboardPage {
   /** Session-only hide of the soft banner (full skip uses journey.complete). */
   readonly bannerDismissed = signal(false);
 
+  /** Selected month for monthly history (defaults to current). */
+  readonly selectedMonthId = signal(this.store.ensureCurrentMonth().id);
+
+  readonly months = this.store.monthsNewestFirst;
+
+  readonly monthButtons = computed(() => {
+    this.language.lang();
+    return this.months().map((month) => ({
+      ...month,
+      displayLabel: this.language.formatMonthLabel(month.year, month.month),
+    }));
+  });
+
   readonly stats = computed(() => {
     // Recompute labels when language changes.
     this.language.lang();
     this.transloco.getActiveLang();
-    const base = this.store.getDashboardStats();
+    const base = this.store.getDashboardStats(this.selectedMonthId());
     return {
       ...base,
       monthLabel: this.language.formatMonthId(base.monthId),
     };
   });
 
-  readonly months = this.store.monthsNewestFirst;
-  readonly recentExpenses = computed(() => this.store.expensesNewestFirst().slice(0, 5));
+  readonly recentExpenses = computed(() => {
+    const monthId = this.selectedMonthId();
+    return this.store
+      .expensesNewestFirst()
+      .filter((expense) => expense.date.startsWith(monthId))
+      .slice(0, 5);
+  });
 
   /** Show soft CTA when tour not completed and user has little data yet. */
   readonly showJourneyBanner = computed(() => {
@@ -63,6 +81,11 @@ export class DashboardPage {
     }
     return Math.round((s.paidCount / total) * 100);
   });
+
+  selectMonth(monthId: string): void {
+    this.store.ensureMonth(monthId);
+    this.selectedMonthId.set(monthId);
+  }
 
   openJourney(): void {
     this.journey.open(true);

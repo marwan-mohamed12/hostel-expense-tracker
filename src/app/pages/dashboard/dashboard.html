@@ -75,6 +75,34 @@
     </div>
   </div>
 
+  <!-- Monthly history switcher -->
+  <article class="ui-card p-4 sm:p-5">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-500">
+        {{ 'dashboard.monthHistory' | transloco }}
+      </h2>
+      <p class="text-xs text-slate-500 dark:text-zinc-500">
+        {{ 'dashboard.monthHistoryHint' | transloco }}
+      </p>
+    </div>
+    <div class="mt-3 flex flex-wrap gap-2">
+      @for (month of monthButtons(); track month.id) {
+        <button
+          type="button"
+          (click)="selectMonth(month.id)"
+          class="ui-chip"
+          [class.ui-chip-active]="selectedMonthId() === month.id"
+          [class.ui-chip-idle]="selectedMonthId() !== month.id"
+        >
+          {{ month.displayLabel }}
+        </button>
+      }
+      @if (monthButtons().length === 0) {
+        <p class="text-sm text-slate-500 dark:text-zinc-500">{{ 'payments.noMonths' | transloco }}</p>
+      }
+    </div>
+  </article>
+
   <!-- Hero: balance + month collection progress -->
   <div
     class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-800 via-brand-700 to-cyan-700 p-6 text-white shadow-xl shadow-brand-900/20 sm:p-8 dark:from-[#021a18] dark:via-[#031510] dark:to-[#020b12] dark:shadow-black/70 dark:ring-1 dark:ring-white/[0.06]"

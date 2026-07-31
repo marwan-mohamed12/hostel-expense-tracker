@@ -2,6 +2,7 @@
 import {
   DEFAULT_MONTHLY_FEE,
   MONTH_NAMES,
+  normalizeExpenseCategory,
 } from '../constants/app.constants';
 import { DashboardStats } from '../../models/app-data.model';
 import { Expense, ExpenseInput } from '../../models/expense.model';
@@ -260,7 +261,7 @@ export class HostelStore {
     const expense: Expense = {
       id: createId(),
       title: String(input.title ?? '').trim(),
-      category: input.category,
+      category: normalizeExpenseCategory(input.category),
       amount: Number(input.amount) || 0,
       date: input.date || todayDate(),
       description: String(input.description ?? '').trim(),
@@ -284,7 +285,7 @@ export class HostelStore {
         return {
           ...expense,
           title: String(input.title ?? '').trim(),
-          category: input.category,
+          category: normalizeExpenseCategory(input.category),
           amount: Number(input.amount) || 0,
           date: input.date,
           description: String(input.description ?? '').trim(),
@@ -295,6 +296,24 @@ export class HostelStore {
       }),
     );
     this.persist();
+  }
+
+  /** All payments for a resident, newest month first. */
+  getPaymentsForResident(residentId: string): Payment[] {
+    return this.paymentsSignal()
+      .filter((payment) => payment.residentId === residentId)
+      .sort((a, b) => b.monthId.localeCompare(a.monthId) || b.updatedAt.localeCompare(a.updatedAt));
+  }
+
+  /** Unique YYYY-MM keys derived from expense dates (newest first). */
+  expenseMonthIds(): string[] {
+    const ids = new Set<string>();
+    for (const expense of this.expensesSignal()) {
+      if (expense.date.length >= 7) {
+        ids.add(expense.date.slice(0, 7));
+      }
+    }
+    return [...ids].sort((a, b) => b.localeCompare(a));
   }
 
   markExpensePaid(id: string, paid: boolean): void {

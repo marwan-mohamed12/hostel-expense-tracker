@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@angular/core';
 import { AppData } from '../../models/app-data.model';
 import { Expense } from '../../models/expense.model';
-import { STORAGE_KEY } from '../constants/app.constants';
+import { normalizeExpenseCategory, STORAGE_KEY } from '../constants/app.constants';
 
 const EMPTY_DATA: AppData = {
   residents: [],
@@ -10,12 +10,16 @@ const EMPTY_DATA: AppData = {
   expenses: [],
 };
 
-/** Older saved expenses had no `paid` flag; treat them as already paid. */
+/**
+ * Normalize legacy expense rows:
+ * - missing `paid` → true (keep historical balance)
+ * - free-text / unknown category → known preset or Other
+ */
 function normalizeExpense(raw: Partial<Expense>): Expense {
   return {
     id: String(raw.id ?? ''),
     title: String(raw.title ?? ''),
-    category: String(raw.category ?? 'Other'),
+    category: normalizeExpenseCategory(raw.category),
     amount: Number(raw.amount) || 0,
     date: String(raw.date ?? ''),
     description: String(raw.description ?? ''),

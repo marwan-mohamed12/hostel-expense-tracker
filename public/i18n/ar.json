@@ -111,7 +111,9 @@
     "recentExpenses": "آخر مصاريف",
     "noExpenses": "مفيش مصاريف متسجّلة لسه.",
     "collectionProgress": "تحصيل الشهر",
-    "ofResidentsPaid": "{{paid}} من {{total}} ساكن دفعوا"
+    "ofResidentsPaid": "{{paid}} من {{total}} ساكن دفعوا",
+    "monthHistory": "تاريخ الشهور",
+    "monthHistoryHint": "بدّل الشهر عشان تشوف التحصيل والصرف القديم"
   },
   "residents": {
     "eyebrow": "الناس",
@@ -141,7 +143,12 @@
     "updatedToast": "{{name}} اتحفظ.",
     "activatedToast": "{{name}} بقى شغّال.",
     "deactivatedToast": "{{name}} بقى مش شغّال.",
-    "removedToast": "{{name}} اتمسح."
+    "removedToast": "{{name}} اتمسح.",
+    "paymentHistory": "السجل",
+    "historyTitle": "سجل التحصيل — {{name}}",
+    "historyMonths": "شهور",
+    "historyCollected": "اللي اتجمع",
+    "historyEmpty": "مفيش سجلات تحصيل للساكن ده لسه."
   },
   "payments": {
     "eyebrow": "الفلوس الداخلة",
@@ -176,7 +183,7 @@
   "expenses": {
     "eyebrow": "الفلوس الخارجة",
     "title": "المصاريف",
-    "subtitle": "سجّل الصرف. المصاريف اللي لسه متدفعش بتتتابع بس مش بتخصم من الباقي.",
+    "subtitle": "سجّل الصرف حسب النوع. صفّي التاريخ عشان تلاقي الغاز أو المية بسرعة. المصاريف اللي لسه متدفعش مش بتخصم من الباقي.",
     "paidLabel": "اتدفع:",
     "unpaidLabel": "لسه:",
     "addExpense": "ضيف مصروف",
@@ -186,6 +193,7 @@
     "titlePlaceholder": "مثال: فاتورة الكهربا",
     "titleError": "اكتب عنوان (حرفين على الأقل).",
     "categoryRequired": "النوع *",
+    "categoryHint": "اختار من القائمة (مية، غاز، كهربا، …) — مش نص حر.",
     "amountRequired": "المبلغ (ج.م) *",
     "amountPlaceholder": "مثال: 250",
     "amountError": "اكتب مبلغ أكبر من صفر.",
@@ -200,6 +208,12 @@
     "alreadyPaidHint": "شيّل العلامة لو الفاتورة لسه متدفعش — هتتسجل بس مش هتخصم من الباقي.",
     "descriptionPlaceholder": "تفاصيل لو حابب",
     "empty": "مفيش مصاريف متسجّلة لسه.",
+    "emptyFiltered": "مفيش مصاريف مطابقة للفلاتر دي.",
+    "historyFilters": "سجل المصاريف",
+    "clearFilters": "امسح الفلاتر",
+    "allMonths": "كل الشهور",
+    "byCategory": "الإجمالي حسب النوع",
+    "showingCount": "{{count}} ظاهر",
     "deleteTitle": "تمسح المصروف؟",
     "deleteText": "\"{{title}}\" هيتشال نهائي.",
     "deleteConfirm": "أيوه، امسح المصروف",

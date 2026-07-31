@@ -2,11 +2,16 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { EXPENSE_CATEGORIES } from '../../core/constants/app.constants';
+import { EXPENSE_CATEGORIES, ExpenseCategory } from '../../core/constants/app.constants';
+import { LanguageService } from '../../core/i18n/language.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { ToastService } from '../../core/services/toast.service';
 import { confirmDelete } from '../../core/utils/swal-dialog';
 import { Expense } from '../../models/expense.model';
+
+export type ExpenseStatusFilter = 'all' | 'paid' | 'unpaid';
+export type ExpenseCategoryFilter = 'all' | ExpenseCategory;
+export type ExpenseMonthFilter = 'all' | string;
 
 @Component({
   selector: 'app-expenses',
@@ -18,27 +23,107 @@ export class ExpensesPage {
   private readonly fb = inject(FormBuilder);
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
+  private readonly language = inject(LanguageService);
 
   readonly categories = EXPENSE_CATEGORIES;
   readonly expenses = this.store.expensesNewestFirst;
   readonly editingId = signal<string | null>(null);
   readonly showForm = signal(false);
 
+  readonly categoryFilter = signal<ExpenseCategoryFilter>('all');
+  readonly monthFilter = signal<ExpenseMonthFilter>('all');
+  readonly statusFilter = signal<ExpenseStatusFilter>('all');
+
+  readonly statusOptions = [
+    { id: 'all' as const, labelKey: 'common.all' },
+    { id: 'paid' as const, labelKey: 'common.paid' },
+    { id: 'unpaid' as const, labelKey: 'common.unpaid' },
+  ];
+
+  /** Month chips from expense dates + open payment months (newest first). */
+  readonly monthOptions = computed(() => {
+    this.language.lang();
+    const fromExpenses = this.store.expenseMonthIds();
+    const fromMonths = this.store.monthsNewestFirst().map((m) => m.id);
+    const ids = [...new Set([...fromExpenses, ...fromMonths])].sort((a, b) =>
+      b.localeCompare(a),
+    );
+    return ids.map((id) => ({
+      id,
+      label: this.language.formatMonthId(id),
+    }));
+  });
+
+  readonly filteredExpenses = computed(() => {
+    const category = this.categoryFilter();
+    const month = this.monthFilter();
+    const status = this.statusFilter();
+
+    return this.expenses().filter((expense) => {
+      if (category !== 'all' && expense.category !== category) {
+        return false;
+      }
+      if (month !== 'all' && !expense.date.startsWith(month)) {
+        return false;
+      }
+      if (status === 'paid' && !expense.paid) {
+        return false;
+      }
+      if (status === 'unpaid' && expense.paid) {
+        return false;
+      }
+      return true;
+    });
+  });
+
   readonly paidTotal = computed(() =>
-    this.expenses()
+    this.filteredExpenses()
       .filter((expense) => expense.paid)
       .reduce((sum, expense) => sum + expense.amount, 0),
   );
 
   readonly unpaidTotal = computed(() =>
-    this.expenses()
+    this.filteredExpenses()
       .filter((expense) => !expense.paid)
       .reduce((sum, expense) => sum + expense.amount, 0),
   );
 
+  readonly hasActiveFilters = computed(
+    () =>
+      this.categoryFilter() !== 'all' ||
+      this.monthFilter() !== 'all' ||
+      this.statusFilter() !== 'all',
+  );
+
+  /** Per-category totals for quick history glance (respects month/status filters). */
+  readonly categoryBreakdown = computed(() => {
+    this.language.lang();
+    const month = this.monthFilter();
+    const status = this.statusFilter();
+
+    const base = this.expenses().filter((expense) => {
+      if (month !== 'all' && !expense.date.startsWith(month)) {
+        return false;
+      }
+      if (status === 'paid' && !expense.paid) {
+        return false;
+      }
+      if (status === 'unpaid' && expense.paid) {
+        return false;
+      }
+      return true;
+    });
+
+    return EXPENSE_CATEGORIES.map((cat) => {
+      const items = base.filter((e) => e.category === cat);
+      const total = items.reduce((sum, e) => sum + e.amount, 0);
+      return { category: cat, count: items.length, total };
+    }).filter((row) => row.count > 0);
+  });
+
   readonly form = this.fb.group({
     title: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
-    category: this.fb.nonNullable.control(EXPENSE_CATEGORIES[0] as string, Validators.required),
+    category: this.fb.nonNullable.control(EXPENSE_CATEGORIES[0] as ExpenseCategory, Validators.required),
     // null (empty) by default — 0 fails min(0.01) and previously blocked save with no feedback
     amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
     date: this.fb.nonNullable.control(new Date().toISOString().slice(0, 10), Validators.required),
@@ -51,6 +136,24 @@ export class ExpensesPage {
   fieldInvalid(name: 'title' | 'category' | 'amount' | 'date' | 'addedBy'): boolean {
     const control = this.form.controls[name];
     return control.invalid && (control.touched || control.dirty);
+  }
+
+  setCategoryFilter(value: ExpenseCategoryFilter): void {
+    this.categoryFilter.set(value);
+  }
+
+  setMonthFilter(value: ExpenseMonthFilter): void {
+    this.monthFilter.set(value);
+  }
+
+  setStatusFilter(value: ExpenseStatusFilter): void {
+    this.statusFilter.set(value);
+  }
+
+  clearFilters(): void {
+    this.categoryFilter.set('all');
+    this.monthFilter.set('all');
+    this.statusFilter.set('all');
   }
 
   openCreate(): void {

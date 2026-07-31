@@ -111,7 +111,9 @@
     "recentExpenses": "Recent expenses",
     "noExpenses": "No expenses recorded yet.",
     "collectionProgress": "Month collection",
-    "ofResidentsPaid": "{{paid}} of {{total}} residents paid"
+    "ofResidentsPaid": "{{paid}} of {{total}} residents paid",
+    "monthHistory": "Monthly history",
+    "monthHistoryHint": "Switch months to review past collection and spending"
   },
   "residents": {
     "eyebrow": "People",
@@ -141,7 +143,12 @@
     "updatedToast": "{{name}} was saved.",
     "activatedToast": "{{name}} is now active.",
     "deactivatedToast": "{{name}} is now inactive.",
-    "removedToast": "{{name}} was deleted."
+    "removedToast": "{{name}} was deleted.",
+    "paymentHistory": "History",
+    "historyTitle": "Payment history — {{name}}",
+    "historyMonths": "Months",
+    "historyCollected": "Collected",
+    "historyEmpty": "No payment records yet for this resident."
   },
   "payments": {
     "eyebrow": "Collections",
@@ -176,7 +183,7 @@
   "expenses": {
     "eyebrow": "Spending",
     "title": "Expenses",
-    "subtitle": "Record spending. Unpaid expenses are tracked but do not reduce balance left.",
+    "subtitle": "Record spending by category. Filter history to find bills like Gas or Water instantly. Unpaid expenses do not reduce balance.",
     "paidLabel": "Paid:",
     "unpaidLabel": "Unpaid:",
     "addExpense": "Add expense",
@@ -186,6 +193,7 @@
     "titlePlaceholder": "e.g. Electricity bill",
     "titleError": "Enter a title (at least 2 characters).",
     "categoryRequired": "Category *",
+    "categoryHint": "Pick a preset (Water, Gas, Electricity, …) — not free text.",
     "amountRequired": "Amount (EGP) *",
     "amountPlaceholder": "e.g. 250",
     "amountError": "Enter an amount greater than 0.",
@@ -200,6 +208,12 @@
     "alreadyPaidHint": "Uncheck if this bill is not paid yet — it will be tracked but will not reduce balance left.",
     "descriptionPlaceholder": "Optional details",
     "empty": "No expenses recorded yet.",
+    "emptyFiltered": "No expenses match these filters.",
+    "historyFilters": "Expense history",
+    "clearFilters": "Clear filters",
+    "allMonths": "All months",
+    "byCategory": "Totals by category",
+    "showingCount": "{{count}} shown",
     "deleteTitle": "Delete expense?",
     "deleteText": "\"{{title}}\" will be permanently removed.",
     "deleteConfirm": "Yes, delete expense",
