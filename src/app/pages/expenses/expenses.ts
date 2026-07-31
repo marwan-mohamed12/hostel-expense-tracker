@@ -6,10 +6,11 @@ import { EXPENSE_CATEGORIES } from '../../core/constants/app.constants';
 import { HostelStore } from '../../core/services/hostel.store';
 import { confirmDelete, showSuccessToast } from '../../core/utils/swal-dialog';
 import { Expense } from '../../models/expense.model';
+import { LoadingSpinner } from '../../shared/ui/loading-spinner';
 
 @Component({
   selector: 'app-expenses',
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, TranslocoPipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, TranslocoPipe, LoadingSpinner],
   templateUrl: './expenses.html',
 })
 export class ExpensesPage {
@@ -19,8 +20,14 @@ export class ExpensesPage {
 
   readonly categories = EXPENSE_CATEGORIES;
   readonly expenses = this.store.expensesNewestFirst;
+  /** True while expenses list is loading (wired for future API). */
+  readonly listLoading = this.store.expensesLoading;
   readonly editingId = signal<string | null>(null);
   readonly showForm = signal(false);
+
+  constructor() {
+    void this.store.loadExpenses();
+  }
 
   readonly paidTotal = computed(() =>
     this.expenses()

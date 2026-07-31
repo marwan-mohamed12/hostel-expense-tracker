@@ -187,6 +187,9 @@ src/app/
       hostel.store.ts    # Domain operations + signals
     utils/
       swal-dialog.ts     # Shared SweetAlert2 confirm/success helpers
+  shared/
+    ui/
+      loading-spinner.ts # Shared spinner (inline + overlay) for async UI
   models/
     resident.model.ts
     payment.model.ts     # MonthRecord + Payment
@@ -352,6 +355,11 @@ These are optional next steps, not commitments:
 13. **Dashboard header polish:** replaced muted “July 2026 · N active residents” subtitle with visible badges (solid teal month chip + soft teal active-residents chip) under the Dashboard title.
 14. **Unpaid expenses:** expenses have a `paid` flag. Unpaid expenses are tracked but **do not** subtract from balance left. Form checkbox + mark paid/unpaid actions; storage migrates missing `paid` → `true`.
 15. **i18n (Transloco):** English + Arabic runtime localization for the entire UI; language preference in localStorage; RTL for Arabic; month/category labels localized at display time.
+16. **Loading states (backend-ready):**
+    - Shared `LoadingSpinner` (`src/app/shared/ui/loading-spinner.ts`) — inline list loaders + full-screen overlay mode
+    - Language switch: `LanguageService.isLoading` while `transloco.load` runs; navbar button disabled + app overlay (`lang.loading`)
+    - List pages wire store loading flags: payments (`loadMonthPayments` on month switch), residents, expenses, dashboard
+    - Flags are async helpers today (localStorage work); replace method bodies with API calls later without redesigning UI
 
 ---
 
@@ -371,7 +379,8 @@ These are optional next steps, not commitments:
 - `src/app/core/services/hostel.store.ts` — all domain logic
 - `src/app/core/constants/app.constants.ts` — defaults/categories/storage key
 - `src/app/core/utils/swal-dialog.ts` — shared SweetAlert2 confirm/success helpers
-- `src/app/core/i18n/language.service.ts` — language preference, RTL, month/category formatting
+- `src/app/shared/ui/loading-spinner.ts` — shared loading spinner (inline + overlay)
+- `src/app/core/i18n/language.service.ts` — language preference, RTL, month/category formatting; `isLoading` during lang switch
 - `src/app/core/i18n/transloco-loader.ts` — translation file loader
 - `public/i18n/en.json`, `public/i18n/ar.json` — UI translation dictionaries
 - `src/app/models/*` — data shapes
@@ -385,4 +394,4 @@ These are optional next steps, not commitments:
 
 ---
 
-*Last updated: full EN/AR runtime i18n via Transloco + RTL; unpaid expenses (`paid` flag) do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: loading states (language switch overlay + list loaders on payments/residents/expenses/dashboard) ready for backend; full EN/AR runtime i18n via Transloco + RTL; unpaid expenses (`paid` flag) do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*

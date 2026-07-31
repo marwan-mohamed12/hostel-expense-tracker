@@ -126,7 +126,11 @@
     }
   </div>
 
-  @if (filteredResidents().length === 0) {
+  @if (listLoading()) {
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <app-loading-spinner labelKey="residents.loading" />
+    </div>
+  } @else if (filteredResidents().length === 0) {
     <div class="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500 shadow-sm">
       {{ 'residents.empty' | transloco }}
     </div>

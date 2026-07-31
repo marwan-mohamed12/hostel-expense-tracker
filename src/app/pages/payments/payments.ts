@@ -6,10 +6,11 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { confirmDelete, showSuccessToast } from '../../core/utils/swal-dialog';
 import { Payment } from '../../models/payment.model';
+import { LoadingSpinner } from '../../shared/ui/loading-spinner';
 
 @Component({
   selector: 'app-payments',
-  imports: [FormsModule, CurrencyPipe, TranslocoPipe],
+  imports: [FormsModule, CurrencyPipe, TranslocoPipe, LoadingSpinner],
   templateUrl: './payments.html',
 })
 export class PaymentsPage {
@@ -21,10 +22,16 @@ export class PaymentsPage {
   readonly months = this.store.monthsNewestFirst;
   readonly payments = this.store.payments;
   readonly residents = this.store.residents;
+  /** True while month payments are loading (wired for future API). */
+  readonly listLoading = this.store.paymentsLoading;
 
   readonly selectedMonthId = signal(this.store.ensureCurrentMonth().id);
   readonly newYear = signal(new Date().getFullYear());
   readonly newMonth = signal(new Date().getMonth() + 1);
+
+  constructor() {
+    void this.store.loadMonthPayments(this.selectedMonthId());
+  }
 
   readonly selectedMonth = computed(() => {
     this.language.lang();
@@ -78,14 +85,21 @@ export class PaymentsPage {
     };
   });
 
-  selectMonth(monthId: string): void {
-    this.store.ensureMonth(monthId);
+  async selectMonth(monthId: string): Promise<void> {
+    if (monthId === this.selectedMonthId() || this.listLoading()) {
+      return;
+    }
     this.selectedMonthId.set(monthId);
+    await this.store.loadMonthPayments(monthId);
   }
 
-  createMonth(): void {
+  async createMonth(): Promise<void> {
+    if (this.listLoading()) {
+      return;
+    }
     const record = this.store.createMonth(this.newYear(), this.newMonth());
     this.selectedMonthId.set(record.id);
+    await this.store.loadMonthPayments(record.id);
   }
 
   async deleteMonth(): Promise<void> {
