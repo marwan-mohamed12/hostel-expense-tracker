@@ -24,7 +24,13 @@ export class PaymentsPage {
   readonly payments = this.store.payments;
   readonly residents = this.store.residents;
 
+  /** Current month is ensured on store boot; open it by default. */
   readonly selectedMonthId = signal(this.store.ensureCurrentMonth().id);
+  readonly monthPickerOpen = signal(false);
+  readonly calendarYear = signal(Number(this.selectedMonthId().slice(0, 4)));
+
+  /** Optional panel for opening a past month to enter old data. */
+  readonly showManualCreate = signal(false);
   readonly newYear = signal(new Date().getFullYear());
   readonly newMonth = signal(new Date().getMonth() + 1);
 
@@ -43,12 +49,25 @@ export class PaymentsPage {
     };
   });
 
-  readonly monthButtons = computed(() => {
+  readonly calendarMonths = computed(() => {
     this.language.lang();
-    return this.months().map((month) => ({
-      ...month,
-      displayLabel: this.language.formatMonthLabel(month.year, month.month),
-    }));
+    const year = this.calendarYear();
+    const selected = this.selectedMonthId();
+    const now = new Date();
+    const currentId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const openIds = new Set(this.months().map((m) => m.id));
+
+    return this.monthNumbers.map((month) => {
+      const id = `${year}-${String(month).padStart(2, '0')}`;
+      return {
+        id,
+        month,
+        shortLabel: this.transloco.translate(`months.${month}`),
+        selected: selected === id,
+        isCurrent: currentId === id,
+        isOpen: openIds.has(id),
+      };
+    });
   });
 
   readonly rows = computed(() => {
@@ -97,14 +116,66 @@ export class PaymentsPage {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  /** Open / select a month — creates it automatically if needed. */
   selectMonth(monthId: string): void {
     this.store.ensureMonth(monthId);
     this.selectedMonthId.set(monthId);
+    this.calendarYear.set(Number(monthId.slice(0, 4)));
+    this.monthPickerOpen.set(false);
   }
 
+  pickCalendarMonth(month: number): void {
+    const year = this.calendarYear();
+    this.selectMonth(`${year}-${String(month).padStart(2, '0')}`);
+  }
+
+  shiftCalendarYear(delta: number): void {
+    this.calendarYear.update((y) => y + delta);
+  }
+
+  goToCurrentMonth(): void {
+    const now = new Date();
+    this.selectMonth(
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+    );
+  }
+
+  shiftMonth(delta: number): void {
+    const id = this.selectedMonthId();
+    let year = Number(id.slice(0, 4));
+    let month = Number(id.slice(5, 7)) + delta;
+    while (month < 1) {
+      month += 12;
+      year -= 1;
+    }
+    while (month > 12) {
+      month -= 12;
+      year += 1;
+    }
+    this.selectMonth(`${year}-${String(month).padStart(2, '0')}`);
+  }
+
+  toggleMonthPicker(): void {
+    if (!this.monthPickerOpen()) {
+      this.calendarYear.set(Number(this.selectedMonthId().slice(0, 4)));
+    }
+    this.monthPickerOpen.update((open) => !open);
+  }
+
+  closeMonthPicker(): void {
+    this.monthPickerOpen.set(false);
+  }
+
+  toggleManualCreate(): void {
+    this.showManualCreate.update((v) => !v);
+  }
+
+  /** Explicitly open a past (or any) month for entering old data. */
   createMonth(): void {
     const record = this.store.createMonth(this.newYear(), this.newMonth());
     this.selectedMonthId.set(record.id);
+    this.calendarYear.set(record.year);
+    this.showManualCreate.set(false);
     this.toast.success(
       this.transloco.translate('payments.monthOpenedToast', {
         month: this.language.formatMonthLabel(record.year, record.month),

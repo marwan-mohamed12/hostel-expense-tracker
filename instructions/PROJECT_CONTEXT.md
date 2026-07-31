@@ -300,8 +300,9 @@ Treat these as **done** unless asked to change them:
    - Per-resident monthly fee
 
 2. **Monthly payment tracking**
-   - Auto-create current month
-   - Manual create/open month
+   - **Auto-create current month** on app load (`ensureCurrentMonth`); picking a month from the calendar also creates it if missing
+   - **Calendar month navigator** (same pattern as dashboard): prev/next + year grid; open months marked with a dot
+   - **Manual open past month** (optional panel) for entering historical data
    - **Delete month** (removes the month + all its payment rows; expenses unchanged; SweetAlert2 confirm)
    - Seed payments for active residents
    - Mark paid / unpaid
