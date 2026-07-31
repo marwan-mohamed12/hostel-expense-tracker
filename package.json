@@ -11,7 +11,7 @@
   "private": true,
   "packageManager": "npm@11.16.0",
   "dependencies": {
-    "@angular/animations": "^22.0.0",
+    "@angular/animations": "^22.0.8",
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
     "@angular/core": "^22.0.0",
@@ -20,7 +20,7 @@
     "@angular/router": "^22.0.0",
     "@jsverse/transloco": "^8.4.0",
     "ngx-toastr": "^20.0.5",
-    "rxjs": "~7.8.0",
+    "rxjs": "~7.8.2",
     "sweetalert2": "^11.26.25",
     "tslib": "^2.3.0"
   },

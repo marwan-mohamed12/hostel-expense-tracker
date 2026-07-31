@@ -107,7 +107,7 @@ Every expense record must include:
 - Do **not** use SweetAlert2 for success feedback — use `ToastService` / ngx-toastr instead.
 
 ### Toast notifications (ngx-toastr) notes
-- Packages: `ngx-toastr`, `@angular/animations` (required by toastr animations).
+- Packages: `ngx-toastr`, `@angular/animations` (required by toastr animations; keep version aligned with `@angular/core`).
 - Global CSS: `src/styles.css` → `@import 'ngx-toastr/toastr'`.
 - Providers in `app.config.ts`: `provideAnimations()`, `provideToastr({ timeOut, progressBar, closeButton, preventDuplicates, ... })`.
 - Shared wrapper: `src/app/core/services/toast.service.ts` → `ToastService.success/info/error`.
@@ -118,6 +118,7 @@ Every expense record must include:
   - Payments: create/open month, delete month, mark paid, mark unpaid
 - **Do not toast** on every keystroke for inline payment amount/notes/date edits.
 - Toast copy is translated via Transloco at call sites.
+- **Install note:** root `.npmrc` sets `legacy-peer-deps=true` because `ngx-toastr@20` peers Angular `^21` while the app uses Angular 22. Without it, Vercel/`npm install` fails with `ERESOLVE`.
 
 ### Localization (i18n) notes
 - Library: **`@jsverse/transloco`** (runtime dictionaries, not Angular compile-time `@angular/localize`).
