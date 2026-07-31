@@ -5,7 +5,12 @@ import {
   MONTH_NAMES,
   normalizeExpenseCategory,
 } from '../constants/app.constants';
-import { DashboardStats } from '../../models/app-data.model';
+import {
+  BalanceTimelineEvent,
+  CategoryBreakdownItem,
+  DashboardStats,
+  MonthlyChartPoint,
+} from '../../models/app-data.model';
 import { Expense, ExpenseInput } from '../../models/expense.model';
 import { MonthRecord, Payment, PaymentUpdate } from '../../models/payment.model';
 import { Resident, ResidentInput } from '../../models/resident.model';
@@ -543,6 +548,184 @@ export class HostelStore {
 
   getResidentName(residentId: string): string {
     return this.residentsSignal().find((resident) => resident.id === residentId)?.name ?? 'Unknown';
+  }
+
+  // --- Phase 3 analytics ---
+
+  /**
+   * Monthly series for dashboard charts (oldest → newest).
+   * Includes months that have payments, paid expenses, or an open month record.
+   */
+  getMonthlyChartSeries(limit = 12): MonthlyChartPoint[] {
+    const monthIds = this.collectActivityMonthIds();
+    if (monthIds.length === 0) {
+      return [];
+    }
+
+    const slice = monthIds.slice(-Math.max(1, limit));
+    const activeIds = new Set(this.activeResidents().map((resident) => resident.id));
+    const payments = this.paymentsSignal();
+    const expenses = this.expensesSignal();
+
+    // Precompute cumulative totals for months before the window so balanceEnd is correct.
+    const firstId = slice[0]!;
+    let runningCollected = 0;
+    let runningExpenses = 0;
+    for (const monthId of monthIds) {
+      if (monthId >= firstId) {
+        break;
+      }
+      runningCollected += this.sumPaidPaymentsForMonth(payments, monthId);
+      runningExpenses += this.sumPaidExpensesForMonth(expenses, monthId);
+    }
+
+    return slice.map((monthId) => {
+      const [yearText, monthText] = monthId.split('-');
+      const year = Number(yearText);
+      const monthNumber = Number(monthText);
+      const monthCollected = this.sumPaidPaymentsForMonth(payments, monthId);
+      const monthExpenses = this.sumPaidExpensesForMonth(expenses, monthId);
+      runningCollected += monthCollected;
+      runningExpenses += monthExpenses;
+
+      const activeMonthPayments = payments.filter(
+        (payment) => payment.monthId === monthId && activeIds.has(payment.residentId),
+      );
+      const paidActive = activeMonthPayments.filter((payment) => payment.paid).length;
+      const totalActive = activeMonthPayments.length;
+      const collectionRate =
+        totalActive === 0 ? null : Math.round((paidActive / totalActive) * 1000) / 10;
+
+      return {
+        monthId,
+        monthLabel: monthLabel(year, monthNumber),
+        expenses: monthExpenses,
+        collected: monthCollected,
+        collectionRate,
+        balanceEnd: runningCollected - runningExpenses,
+      };
+    });
+  }
+
+  /**
+   * Biggest paid expense categories (all-time), sorted by amount desc.
+   * @param limit max categories to return (remainder is not grouped — take top N only).
+   */
+  getCategoryBreakdown(limit = 8): CategoryBreakdownItem[] {
+    const totals = new Map<string, number>();
+    for (const expense of this.expensesSignal()) {
+      if (!expense.paid) {
+        continue;
+      }
+      const key = expense.category || 'Other';
+      totals.set(key, (totals.get(key) ?? 0) + expense.amount);
+    }
+
+    const entries = [...totals.entries()]
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount || a.category.localeCompare(b.category));
+
+    const top = entries.slice(0, Math.max(1, limit));
+    const sum = top.reduce((acc, item) => acc + item.amount, 0);
+    return top.map((item) => ({
+      category: item.category,
+      amount: item.amount,
+      percent: sum > 0 ? Math.round((item.amount / sum) * 1000) / 10 : 0,
+    }));
+  }
+
+  /**
+   * Chronological balance-affecting events (payments in, paid expenses out).
+   * Returns newest first for timeline display; runningBalance is after each event.
+   */
+  getBalanceTimeline(limit = 50): BalanceTimelineEvent[] {
+    type RawEvent = Omit<BalanceTimelineEvent, 'runningBalance'>;
+    const raw: RawEvent[] = [];
+
+    for (const payment of this.paymentsSignal()) {
+      if (!payment.paid) {
+        continue;
+      }
+      const date =
+        payment.paidAt && payment.paidAt.length >= 10
+          ? payment.paidAt.slice(0, 10)
+          : `${payment.monthId}-01`;
+      raw.push({
+        id: `payment-${payment.id}`,
+        date,
+        type: 'payment',
+        title: this.getResidentName(payment.residentId),
+        amount: payment.amount,
+        signedAmount: payment.amount,
+        meta: payment.monthId,
+      });
+    }
+
+    for (const expense of this.expensesSignal()) {
+      if (!expense.paid) {
+        continue;
+      }
+      const date = expense.date.length >= 10 ? expense.date.slice(0, 10) : expense.date;
+      raw.push({
+        id: `expense-${expense.id}`,
+        date,
+        type: 'expense',
+        title: expense.title,
+        amount: expense.amount,
+        signedAmount: -expense.amount,
+        meta: expense.category,
+      });
+    }
+
+    raw.sort((a, b) => {
+      const byDate = a.date.localeCompare(b.date);
+      if (byDate !== 0) {
+        return byDate;
+      }
+      // Stable tie-break: payments before expenses on same day, then id.
+      if (a.type !== b.type) {
+        return a.type === 'payment' ? -1 : 1;
+      }
+      return a.id.localeCompare(b.id);
+    });
+
+    let running = 0;
+    const withBalance: BalanceTimelineEvent[] = raw.map((event) => {
+      running += event.signedAmount;
+      return { ...event, runningBalance: running };
+    });
+
+    // Newest first for the UI.
+    return withBalance.reverse().slice(0, Math.max(1, limit));
+  }
+
+  /** Month ids that have payments, paid expenses, or an open month shell — ascending. */
+  private collectActivityMonthIds(): string[] {
+    const ids = new Set<string>();
+    for (const month of this.monthsSignal()) {
+      ids.add(month.id);
+    }
+    for (const payment of this.paymentsSignal()) {
+      ids.add(payment.monthId);
+    }
+    for (const expense of this.expensesSignal()) {
+      if (expense.date.length >= 7) {
+        ids.add(expense.date.slice(0, 7));
+      }
+    }
+    return [...ids].sort((a, b) => a.localeCompare(b));
+  }
+
+  private sumPaidPaymentsForMonth(payments: Payment[], monthId: string): number {
+    return payments
+      .filter((payment) => payment.monthId === monthId && payment.paid)
+      .reduce((sum, payment) => sum + payment.amount, 0);
+  }
+
+  private sumPaidExpensesForMonth(expenses: Expense[], monthId: string): number {
+    return expenses
+      .filter((expense) => expense.paid && expense.date.startsWith(monthId))
+      .reduce((sum, expense) => sum + expense.amount, 0);
   }
 
   private seedMissingPayments(monthId: string): void {

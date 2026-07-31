@@ -92,8 +92,16 @@ Every expense record must include:
 | Persistence | **localStorage** | Client-side for v1; no backend yet |
 | State | **HostelStore** service + Angular signals | Single source of truth in the app |
 | i18n | **@jsverse/transloco** (runtime) | EN + AR; runtime language switch; RTL for Arabic |
+| Charts / statistics | **ApexCharts** via `ng-apexcharts` | Phase 3 dashboard analytics |
 | Tests | Vitest (`ng test`) | |
 | Package manager | npm | |
+
+### Charts (ApexCharts) notes
+- Packages: `apexcharts`, `ng-apexcharts` (standalone `ChartComponent` / `<apx-chart>`).
+- Allowed as CommonJS in `angular.json` → `allowedCommonJsDependencies: ["sweetalert2", "apexcharts"]`.
+- Dynamic import of `apexcharts/client` (no `scripts[]` entry required for modern Angular builds).
+- Dashboard charts remount via `@for (mount of [chartMountKey()]; track mount)` so theme/lang/data changes rebuild the chart.
+- Store aggregations: `getMonthlyChartSeries`, `getCategoryBreakdown`, `getBalanceTimeline`.
 
 ### SweetAlert2 notes
 - Package: `sweetalert2` (listed in `package.json`).
@@ -378,7 +386,7 @@ Treat these as **done** unless asked to change them:
 These are optional next steps, not commitments:
 
 - Export / import JSON backup of localStorage data
-- Better statistics (charts by month/category) — Phase 2 lays filter foundations
+- ~~Better statistics (charts by month/category)~~ — **done in Phase 3**
 - Multi-month comparison reports
 - Text search on expenses and residents
 - Edit payment history validation rules
@@ -414,6 +422,7 @@ These are optional next steps, not commitments:
 18. **Dark mode:** `ThemeService` (`light` | `dark` | `system`), preference key `hostel-expense-tracker-theme` in localStorage; FOUC-safe boot script in `index.html`; header icon cycles light → dark → system; Tailwind `@custom-variant dark` on `html.dark`; SweetAlert dark styles.
 19. **User journey:** guided product tour so new users understand features and workflow (residents → payments → expenses → dashboard); EN/AR; first-visit auto-open + header help + empty dashboard banner.
 20. **Phase 2 — organization & history:** expense categories (presets + custom); filter dialog on Expenses; dashboard compact month navigator; resident payment history panel on Residents.
+21. **Phase 3 — statistics & balance timeline:** ApexCharts on Dashboard (monthly expenses bar, collection rate line, category donut, balance area trend) + chronological balance timeline (paid payments in / paid expenses out with running balance). Store helpers and EN/AR copy. Issue #19.
 
 ---
 
@@ -446,9 +455,9 @@ These are optional next steps, not commitments:
 - `src/app/pages/residents/*`
 - `src/app/pages/payments/*`
 - `src/app/pages/expenses/*`
-- `package.json`, `angular.json` — SPA build (no SSR entries); SweetAlert2 CommonJS allowlist
+- `package.json`, `angular.json` — SPA build (no SSR entries); SweetAlert2 + ApexCharts CommonJS allowlist
 - `src/styles.css` — Tailwind 4 theme tokens, ambient canvas, shared `.ui-*` utilities, SweetAlert2 CSS (angular-toastify styles are component-scoped)
 
 ---
 
-*Last updated: Phase 2 (structured expense categories, expense history filters, dashboard month switcher, resident payment history); user journey; dark mode; UI/UX redesign; angular-toastify + SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: Phase 3 (ApexCharts statistics + balance timeline on Dashboard, issue #19); Phase 2 history/filters; user journey; dark mode; UI/UX redesign; angular-toastify + SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
