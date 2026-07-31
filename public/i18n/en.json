@@ -126,16 +126,11 @@
     "removeTitle": "Remove {{name}}?",
     "removeText": "Their payment history for this resident will also be removed.",
     "removeConfirm": "Yes, remove resident",
-    "createdTitle": "Resident added",
-    "createdText": "{{name}} was added.",
-    "updatedTitle": "Resident updated",
-    "updatedText": "{{name}} was saved.",
-    "activatedTitle": "Resident activated",
-    "activatedText": "{{name}} is now active.",
-    "deactivatedTitle": "Resident deactivated",
-    "deactivatedText": "{{name}} is now inactive.",
-    "removedTitle": "Resident removed",
-    "removedText": "{{name}} was deleted."
+    "createdToast": "{{name}} was added.",
+    "updatedToast": "{{name}} was saved.",
+    "activatedToast": "{{name}} is now active.",
+    "deactivatedToast": "{{name}} is now inactive.",
+    "removedToast": "{{name}} was deleted."
   },
   "payments": {
     "eyebrow": "Collections",
@@ -160,14 +155,10 @@
     "deleteHtml": "This will permanently remove the month and all <strong>{{count}}</strong> payment record(s){{paidNote}}.<br><br>Expenses are not affected.",
     "deletePaidNote": " <strong>(including {{paidCount}} marked paid)</strong>",
     "deleteConfirm": "Yes, delete month",
-    "monthOpenedTitle": "Month opened",
-    "monthOpenedText": "{{month}} is ready for tracking.",
-    "markedPaidTitle": "Marked paid",
-    "markedPaidText": "{{name}} is marked paid.",
-    "markedUnpaidTitle": "Marked unpaid",
-    "markedUnpaidText": "{{name}} is marked unpaid.",
-    "deletedTitle": "Month deleted",
-    "deletedText": "{{month}} and its payment records were removed."
+    "monthOpenedToast": "{{month}} is ready for tracking.",
+    "markedPaidToast": "{{name}} is marked paid.",
+    "markedUnpaidToast": "{{name}} is marked unpaid.",
+    "deletedToast": "{{month}} and its payment records were removed."
   },
   "expenses": {
     "eyebrow": "Spending",
@@ -193,15 +184,10 @@
     "deleteTitle": "Delete expense?",
     "deleteText": "\"{{title}}\" will be permanently removed.",
     "deleteConfirm": "Yes, delete expense",
-    "createdTitle": "Expense added",
-    "createdText": "\"{{title}}\" was recorded.",
-    "updatedTitle": "Expense updated",
-    "updatedText": "\"{{title}}\" was saved.",
-    "markedPaidTitle": "Marked paid",
-    "markedPaidText": "\"{{title}}\" is marked paid.",
-    "markedUnpaidTitle": "Marked unpaid",
-    "markedUnpaidText": "\"{{title}}\" is marked unpaid.",
-    "deletedTitle": "Expense deleted",
-    "deletedText": "\"{{title}}\" was removed."
+    "createdToast": "\"{{title}}\" was recorded.",
+    "updatedToast": "\"{{title}}\" was saved.",
+    "markedPaidToast": "\"{{title}}\" is marked paid.",
+    "markedUnpaidToast": "\"{{title}}\" is marked unpaid.",
+    "deletedToast": "\"{{title}}\" was removed."
   }
 }

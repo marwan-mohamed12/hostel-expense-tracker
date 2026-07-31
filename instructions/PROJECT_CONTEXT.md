@@ -86,7 +86,7 @@ Every expense record must include:
 | Styling | **Tailwind CSS 4** | Via `@import 'tailwindcss'` + PostCSS plugin |
 | Forms | `@angular/forms` | Reactive forms for residents/expenses; template forms for quick payment edits |
 | Modals / confirmations | **SweetAlert2** | Destructive confirms only (not success feedback) |
-| Success / action toasts | **ngx-toastr** | Non-blocking corner toasts after add/edit/delete and key toggles |
+| Success / action toasts | **angular-toastify** | React-Toastify-style corner toasts; one sentence per toast |
 | Routing | `@angular/router` | SPA client routes |
 | Rendering | **SPA only (no SSR)** | SSR was removed intentionally |
 | Persistence | **localStorage** | Client-side for v1; no backend yet |
@@ -104,21 +104,22 @@ Every expense record must include:
 - **Used for all destructive confirms:** delete month (Payments), remove resident (Residents), delete expense (Expenses).
 - Dialog copy is translated via Transloco at call sites (pass already-translated strings).
 - Do **not** use native `alert` / `confirm` / `prompt` in the app.
-- Do **not** use SweetAlert2 for success feedback — use `ToastService` / ngx-toastr instead.
+- Do **not** use SweetAlert2 for success feedback — use app `ToastService` / angular-toastify instead.
 
-### Toast notifications (ngx-toastr) notes
-- Packages: `ngx-toastr`, `@angular/animations` (required by toastr animations; keep version aligned with `@angular/core`).
-- Global CSS: `src/styles.css` → `@import 'ngx-toastr/toastr'`.
-- Providers in `app.config.ts`: `provideAnimations()`, `provideToastr({ timeOut, progressBar, closeButton, preventDuplicates, ... })`.
-- Shared wrapper: `src/app/core/services/toast.service.ts` → `ToastService.success/info/error`.
-  - RTL-aware position: `toast-top-left` when AR, `toast-top-right` when EN.
+### Toast notifications (angular-toastify) notes
+- Package: `angular-toastify` (React Toastify clone for Angular).
+- Import `AngularToastifyModule` on the app shell; render once:
+  `<lib-toastify-toast-container [position] … />` in `app.html`.
+- Container options used: slide transition, ~2.8s autoClose, newestOnTop, preventDuplicates, no icon library.
+- Position is RTL-aware via signal: `top-left` when AR, `top-right` when EN.
+- Shared wrapper: `src/app/core/services/toast.service.ts` wraps library `ToastService` so call sites stay on one API.
+  - `success(message)` / `info(message)` / `error(message)` — **single sentence only** (no title + body).
 - **Show success toasts after:**
   - Residents: create, update, remove, activate, deactivate
   - Expenses: create, update, remove, mark paid, mark unpaid
   - Payments: create/open month, delete month, mark paid, mark unpaid
 - **Do not toast** on every keystroke for inline payment amount/notes/date edits.
-- Toast copy is translated via Transloco at call sites.
-- **Install note:** root `.npmrc` sets `legacy-peer-deps=true` because `ngx-toastr@20` peers Angular `^21` while the app uses Angular 22. Without it, Vercel/`npm install` fails with `ERESOLVE`.
+- Toast copy is translated via Transloco at call sites (`*Toast` keys).
 
 ### Localization (i18n) notes
 - Library: **`@jsverse/transloco`** (runtime dictionaries, not Angular compile-time `@angular/localize`).
@@ -200,7 +201,7 @@ src/app/
     services/
       storage.service.ts # localStorage load/save
       hostel.store.ts    # Domain operations + signals
-      toast.service.ts   # ngx-toastr wrapper (RTL position)
+      toast.service.ts   # angular-toastify wrapper (one-line messages)
     utils/
       swal-dialog.ts     # Shared SweetAlert2 confirm helpers (destructive only)
   models/
@@ -305,7 +306,7 @@ Treat these as **done** unless asked to change them:
 
 6. **Localization (EN + AR)**
    - Runtime i18n via Transloco; header language toggle
-   - Full UI translation: shell, all pages, filters, form labels/placeholders, empty states, SweetAlert confirms, ngx-toastr messages
+   - Full UI translation: shell, all pages, filters, form labels/placeholders, empty states, SweetAlert confirms, toast messages
    - Arabic RTL (`dir="rtl"`) when AR is active
    - Localized month names and expense category display labels
 
@@ -320,7 +321,7 @@ Treat these as **done** unless asked to change them:
    - Slate neutrals
    - Rounded cards (`rounded-2xl`), soft borders/shadows
    - **Mobile (< md):** burger nav + card lists; **Desktop (md+):** horizontal nav + data tables
-4. Prefer **SweetAlert2** for destructive confirmations and **ngx-toastr** (`ToastService`) for success/action feedback — never native `alert` / `confirm`.
+4. Prefer **SweetAlert2** for destructive confirmations and **angular-toastify** (`ToastService`) for success/action feedback — never native `alert` / `confirm`. One short sentence per toast.
 5. Do **not** reintroduce SSR unless the user asks.
 6. Do **not** add a backend unless the user asks; localStorage is intentional for v1.
 7. Do **not** hardcode a single global fee of 250 as the only allowed amount; fee is per resident.
@@ -368,7 +369,7 @@ These are optional next steps, not commitments:
 13. **Dashboard header polish:** replaced muted “July 2026 · N active residents” subtitle with visible badges (solid teal month chip + soft teal active-residents chip) under the Dashboard title.
 14. **Unpaid expenses:** expenses have a `paid` flag. Unpaid expenses are tracked but **do not** subtract from balance left. Form checkbox + mark paid/unpaid actions; storage migrates missing `paid` → `true`.
 15. **i18n (Transloco):** English + Arabic runtime localization for the entire UI; language preference in localStorage; RTL for Arabic; month/category labels localized at display time.
-16. **Toast notifications (ngx-toastr):** non-blocking corner toasts for create/update/delete and key toggles; SweetAlert2 kept only for destructive confirms. Shared `ToastService` with RTL-aware placement. GitHub issue #7.
+16. **Toast notifications:** first shipped with ngx-toastr (#7 / PR #8); later replaced with **angular-toastify** (PR follow-up) for cleaner React-Toastify-style UI and **one-sentence** messages only.
 
 ---
 
@@ -388,7 +389,7 @@ These are optional next steps, not commitments:
 - `src/app/core/services/hostel.store.ts` — all domain logic
 - `src/app/core/constants/app.constants.ts` — defaults/categories/storage key
 - `src/app/core/utils/swal-dialog.ts` — shared SweetAlert2 destructive confirm helpers
-- `src/app/core/services/toast.service.ts` — ngx-toastr wrapper (success/info/error, RTL position)
+- `src/app/core/services/toast.service.ts` — angular-toastify wrapper (single-sentence success/info/error)
 - `src/app/core/i18n/language.service.ts` — language preference, RTL, month/category formatting
 - `src/app/core/i18n/transloco-loader.ts` — translation file loader
 - `public/i18n/en.json`, `public/i18n/ar.json` — UI translation dictionaries
@@ -399,8 +400,8 @@ These are optional next steps, not commitments:
 - `src/app/pages/payments/*`
 - `src/app/pages/expenses/*`
 - `package.json`, `angular.json` — SPA build (no SSR entries); SweetAlert2 CommonJS allowlist
-- `src/styles.css` — Tailwind + SweetAlert2 + ngx-toastr CSS imports
+- `src/styles.css` — Tailwind + SweetAlert2 CSS imports (angular-toastify styles are component-scoped)
 
 ---
 
-*Last updated: ngx-toastr action toasts + SweetAlert2 confirms only; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: angular-toastify one-line action toasts + SweetAlert2 confirms; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*

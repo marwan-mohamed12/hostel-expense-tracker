@@ -100,14 +100,12 @@ export class ExpensesPage {
     if (editingId) {
       this.store.updateExpense(editingId, payload);
       this.toast.success(
-        this.transloco.translate('expenses.updatedTitle'),
-        this.transloco.translate('expenses.updatedText', { title: payload.title }),
+        this.transloco.translate('expenses.updatedToast', { title: payload.title }),
       );
     } else {
       this.store.addExpense(payload);
       this.toast.success(
-        this.transloco.translate('expenses.createdTitle'),
-        this.transloco.translate('expenses.createdText', { title: payload.title }),
+        this.transloco.translate('expenses.createdToast', { title: payload.title }),
       );
     }
 
@@ -116,17 +114,12 @@ export class ExpensesPage {
 
   setPaid(expense: Expense, paid: boolean): void {
     this.store.markExpensePaid(expense.id, paid);
-    if (paid) {
-      this.toast.success(
-        this.transloco.translate('expenses.markedPaidTitle'),
-        this.transloco.translate('expenses.markedPaidText', { title: expense.title }),
-      );
-    } else {
-      this.toast.success(
-        this.transloco.translate('expenses.markedUnpaidTitle'),
-        this.transloco.translate('expenses.markedUnpaidText', { title: expense.title }),
-      );
-    }
+    this.toast.success(
+      this.transloco.translate(
+        paid ? 'expenses.markedPaidToast' : 'expenses.markedUnpaidToast',
+        { title: expense.title },
+      ),
+    );
   }
 
   async remove(expense: Expense): Promise<void> {
@@ -147,8 +140,7 @@ export class ExpensesPage {
     }
 
     this.toast.success(
-      this.transloco.translate('expenses.deletedTitle'),
-      this.transloco.translate('expenses.deletedText', { title: expense.title }),
+      this.transloco.translate('expenses.deletedToast', { title: expense.title }),
     );
   }
 }
