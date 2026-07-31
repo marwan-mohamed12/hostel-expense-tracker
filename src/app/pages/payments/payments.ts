@@ -1,20 +1,23 @@
-﻿import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MONTH_NAMES } from '../../core/constants/app.constants';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LanguageService } from '../../core/i18n/language.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { confirmDelete, showSuccessToast } from '../../core/utils/swal-dialog';
 import { Payment } from '../../models/payment.model';
 
 @Component({
   selector: 'app-payments',
-  imports: [FormsModule, CurrencyPipe],
+  imports: [FormsModule, CurrencyPipe, TranslocoPipe],
   templateUrl: './payments.html',
 })
 export class PaymentsPage {
   private readonly store = inject(HostelStore);
+  private readonly language = inject(LanguageService);
+  private readonly transloco = inject(TranslocoService);
 
-  readonly monthNames = MONTH_NAMES;
+  readonly monthNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
   readonly months = this.store.monthsNewestFirst;
   readonly payments = this.store.payments;
   readonly residents = this.store.residents;
@@ -24,25 +27,33 @@ export class PaymentsPage {
   readonly newMonth = signal(new Date().getMonth() + 1);
 
   readonly selectedMonth = computed(() => {
+    this.language.lang();
     const id = this.selectedMonthId();
-    return (
-      this.months().find((month) => month.id === id) ?? {
-        id,
-        year: Number(id.slice(0, 4)),
-        month: Number(id.slice(5, 7)),
-        label: id,
-        createdAt: '',
-      }
-    );
+    const found = this.months().find((month) => month.id === id);
+    const year = found?.year ?? Number(id.slice(0, 4));
+    const month = found?.month ?? Number(id.slice(5, 7));
+    return {
+      id,
+      year,
+      month,
+      label: this.language.formatMonthLabel(year, month),
+      createdAt: found?.createdAt ?? '',
+    };
+  });
+
+  readonly monthButtons = computed(() => {
+    this.language.lang();
+    return this.months().map((month) => ({
+      ...month,
+      displayLabel: this.language.formatMonthLabel(month.year, month.month),
+    }));
   });
 
   readonly rows = computed(() => {
     const monthId = this.selectedMonthId();
-    // Depend on payments + residents so list refreshes after store updates.
     this.payments();
     this.residents();
 
-    // Only active residents are tracked for monthly paid/unpaid.
     const activeIds = new Set(this.store.activeResidents().map((resident) => resident.id));
 
     return this.store
@@ -83,16 +94,17 @@ export class PaymentsPage {
     const paidCount = this.summary().paidCount;
     const paidNote =
       paidCount > 0
-        ? ` <strong>(including ${paidCount} marked paid)</strong>`
+        ? this.transloco.translate('payments.deletePaidNote', { paidCount })
         : '';
 
     const confirmed = await confirmDelete({
-      title: `Delete ${month.label}?`,
-      html:
-        `This will permanently remove the month and all <strong>${paymentCount}</strong> payment record(s)` +
-        paidNote +
-        `.<br><br>Expenses are not affected.`,
-      confirmButtonText: 'Yes, delete month',
+      title: this.transloco.translate('payments.deleteTitle', { month: month.label }),
+      html: this.transloco.translate('payments.deleteHtml', {
+        count: paymentCount,
+        paidNote,
+      }),
+      confirmButtonText: this.transloco.translate('payments.deleteConfirm'),
+      cancelButtonText: this.transloco.translate('common.cancel'),
     });
 
     if (!confirmed) {
@@ -101,7 +113,6 @@ export class PaymentsPage {
 
     const recreated = this.store.removeMonth(month.id);
     if (recreated) {
-      // Current month was recreated empty after delete.
       this.selectedMonthId.set(recreated.id);
     } else {
       const remaining = this.store.monthsNewestFirst();
@@ -113,8 +124,8 @@ export class PaymentsPage {
     }
 
     await showSuccessToast(
-      'Month deleted',
-      `${month.label} and its payment records were removed.`,
+      this.transloco.translate('payments.deletedTitle'),
+      this.transloco.translate('payments.deletedText', { month: month.label }),
     );
   }
 
