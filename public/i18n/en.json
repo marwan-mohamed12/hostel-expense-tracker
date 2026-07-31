@@ -11,7 +11,8 @@
     "expenses": "Expenses",
     "mainAria": "Main",
     "mobileAria": "Mobile",
-    "toggleMenu": "Toggle navigation menu"
+    "toggleMenu": "Toggle navigation menu",
+    "homeAria": "Go to homepage"
   },
   "lang": {
     "switchTo": "ع",
@@ -207,5 +208,79 @@
     "markedPaidToast": "\"{{title}}\" is marked paid.",
     "markedUnpaidToast": "\"{{title}}\" is marked unpaid.",
     "deletedToast": "\"{{title}}\" was removed."
+  },
+  "journey": {
+    "eyebrow": "How it works",
+    "stepOf": "{{current}} / {{total}}",
+    "navLabel": "How it works",
+    "openAria": "Open guided tour — how to use this app",
+    "closeAria": "Close tour",
+    "stepsAria": "Tour steps",
+    "skip": "Skip",
+    "back": "Back",
+    "next": "Next",
+    "done": "Close",
+    "startUsing": "Start using the app",
+    "openPage": "Open this page",
+    "bannerTitle": "New here? Take a 1-minute tour",
+    "bannerBody": "See how residents, monthly payments, expenses, and balance fit together.",
+    "bannerCta": "Start tour",
+    "bannerDismiss": "Not now",
+    "steps": {
+      "welcome": {
+        "title": "Welcome to Hostel Expense Tracker",
+        "body": "This app keeps your hostel money clear: fees collected from residents, money spent on shared bills, and what is left.",
+        "bullets": {
+          "0": "Track monthly service fees per resident",
+          "1": "Record shared expenses (electricity, repairs, and more)",
+          "2": "See current balance: collected minus paid expenses"
+        }
+      },
+      "residents": {
+        "title": "1. Add your residents",
+        "body": "Start on Residents. Each person has their own monthly fee — it does not have to be the same for everyone.",
+        "bullets": {
+          "0": "Add name, room, phone, and monthly fee (EGP)",
+          "1": "Only active residents show up in monthly payment tracking",
+          "2": "Deactivate someone who left without deleting history later if you need"
+        }
+      },
+      "payments": {
+        "title": "2. Mark monthly payments",
+        "body": "Each month is tracked separately. The current month is created for you; you can open other months too.",
+        "bullets": {
+          "0": "Mark each active resident paid or unpaid",
+          "1": "Payment amount defaults to their monthly fee — you can edit it",
+          "2": "Paid amounts increase total collected and the balance"
+        }
+      },
+      "expenses": {
+        "title": "3. Log hostel expenses",
+        "body": "Record bills and spending with a category, amount, date, and who added them.",
+        "bullets": {
+          "0": "Only expenses marked paid reduce the balance left",
+          "1": "Unpaid bills stay visible so you do not forget them",
+          "2": "Toggle paid / unpaid anytime from the list"
+        }
+      },
+      "dashboard": {
+        "title": "4. Read the dashboard",
+        "body": "Home shows this month’s collection progress, unpaid residents, recent spending, and overall balance.",
+        "bullets": {
+          "0": "Current balance = all paid fees − all paid expenses",
+          "1": "Month chips show paid vs not paid among active residents only",
+          "2": "Use Track payments or Add expense for quick actions"
+        }
+      },
+      "ready": {
+        "title": "You’re ready",
+        "body": "Typical flow: add residents → collect this month’s fees → log expenses → check balance on the dashboard.",
+        "bullets": {
+          "0": "Switch language with ع / EN in the header (Arabic is RTL)",
+          "1": "Cycle light, dark, or system theme with the sun/moon icon",
+          "2": "Reopen this tour anytime with the ? button in the header"
+        }
+      }
+    }
   }
 }

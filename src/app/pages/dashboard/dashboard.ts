@@ -1,9 +1,10 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LanguageService } from '../../core/i18n/language.service';
 import { HostelStore } from '../../core/services/hostel.store';
+import { UserJourneyService } from '../../core/services/user-journey.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,6 +15,10 @@ export class DashboardPage {
   private readonly store = inject(HostelStore);
   private readonly language = inject(LanguageService);
   private readonly transloco = inject(TranslocoService);
+  private readonly journey = inject(UserJourneyService);
+
+  /** Session-only hide of the soft banner (full skip uses journey.complete). */
+  readonly bannerDismissed = signal(false);
 
   readonly stats = computed(() => {
     // Recompute labels when language changes.
@@ -28,6 +33,14 @@ export class DashboardPage {
 
   readonly months = this.store.monthsNewestFirst;
   readonly recentExpenses = computed(() => this.store.expensesNewestFirst().slice(0, 5));
+
+  /** Show soft CTA when tour not completed and user has little data yet. */
+  readonly showJourneyBanner = computed(() => {
+    if (this.journey.completed() || this.bannerDismissed() || this.journey.isOpen()) {
+      return false;
+    }
+    return this.store.activeResidents().length === 0;
+  });
 
   readonly unpaidPayments = computed(() => {
     const monthId = this.stats().monthId;
@@ -50,6 +63,16 @@ export class DashboardPage {
     }
     return Math.round((s.paidCount / total) * 100);
   });
+
+  openJourney(): void {
+    this.journey.open(true);
+  }
+
+  dismissBanner(): void {
+    this.bannerDismissed.set(true);
+    // Remember skip so first-visit auto-open does not nag on reload.
+    this.journey.completeAndClose();
+  }
 
   initials(name: string): string {
     const parts = name.trim().split(/\s+/).filter(Boolean);

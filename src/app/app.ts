@@ -5,10 +5,19 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 import { LanguageService } from './core/i18n/language.service';
 import { ThemeService } from './core/services/theme.service';
+import { UserJourneyService } from './core/services/user-journey.service';
+import { UserJourneyComponent } from './shared/user-journey/user-journey';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoPipe, AngularToastifyModule],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    TranslocoPipe,
+    AngularToastifyModule,
+    UserJourneyComponent,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -16,6 +25,7 @@ export class App {
   private readonly router = inject(Router);
   readonly language = inject(LanguageService);
   readonly theme = inject(ThemeService);
+  readonly journey = inject(UserJourneyService);
 
   /** Corner for toast container (start edge in RTL). */
   readonly toastPosition = computed(() =>
@@ -46,6 +56,9 @@ export class App {
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(() => this.menuOpen.set(false));
+
+    // First visit: open guided tour after shell paints.
+    this.journey.maybeAutoOpen();
   }
 
   toggleMenu(): void {
@@ -62,5 +75,10 @@ export class App {
 
   cycleTheme(): void {
     this.theme.cycle();
+  }
+
+  openJourney(): void {
+    this.journey.open(true);
+    this.menuOpen.set(false);
   }
 }
