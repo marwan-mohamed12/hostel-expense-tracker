@@ -8,14 +8,20 @@ import { HostelStore } from '../../core/services/hostel.store';
 import { ToastService } from '../../core/services/toast.service';
 import { confirmDelete } from '../../core/utils/swal-dialog';
 import { Expense } from '../../models/expense.model';
+import { MonthCalendarPickerComponent } from '../../shared/month-calendar-picker/month-calendar-picker';
 
 export type ExpenseStatusFilter = 'all' | 'paid' | 'unpaid';
 export type ExpenseCategoryFilter = 'all' | string;
-export type ExpenseMonthFilter = 'all' | string;
 
 @Component({
   selector: 'app-expenses',
-  imports: [ReactiveFormsModule, CurrencyPipe, DatePipe, TranslocoPipe],
+  imports: [
+    ReactiveFormsModule,
+    CurrencyPipe,
+    DatePipe,
+    TranslocoPipe,
+    MonthCalendarPickerComponent,
+  ],
   templateUrl: './expenses.html',
 })
 export class ExpensesPage {
@@ -30,15 +36,15 @@ export class ExpensesPage {
   readonly editingId = signal<string | null>(null);
   readonly showForm = signal(false);
 
-  /** Applied filters (list). */
+  /** Applied filters (list). Empty month array = all months. */
   readonly categoryFilter = signal<ExpenseCategoryFilter>('all');
-  readonly monthFilter = signal<ExpenseMonthFilter>('all');
+  readonly monthFilter = signal<string[]>([]);
   readonly statusFilter = signal<ExpenseStatusFilter>('all');
 
   /** Filter dialog open + drafts (committed only on Apply). */
   readonly filterOpen = signal(false);
   readonly draftCategory = signal<ExpenseCategoryFilter>('all');
-  readonly draftMonth = signal<ExpenseMonthFilter>('all');
+  readonly draftMonth = signal<string[]>([]);
   readonly draftStatus = signal<ExpenseStatusFilter>('all');
 
   /** Inline “add category” while composing an expense. */
@@ -51,30 +57,40 @@ export class ExpensesPage {
     { id: 'unpaid' as const, labelKey: 'common.unpaid' },
   ];
 
-  readonly monthOptions = computed(() => {
+  /** Months that have expenses (activity dots on the filter calendar). */
+  readonly expenseActivityMonthIds = computed(() => this.store.expenseMonthIds());
+
+  /** Label for the active month filter chip / summary. */
+  readonly monthFilterLabel = computed(() => {
     this.language.lang();
-    const fromExpenses = this.store.expenseMonthIds();
-    const fromMonths = this.store.monthsNewestFirst().map((m) => m.id);
-    const ids = [...new Set([...fromExpenses, ...fromMonths])].sort((a, b) =>
-      b.localeCompare(a),
-    );
-    return ids.map((id) => ({
-      id,
-      label: this.language.formatMonthId(id),
-    }));
+    const selected = [...this.monthFilter()].sort((a, b) => b.localeCompare(a));
+    if (selected.length === 0) {
+      return this.transloco.translate('expenses.allMonths');
+    }
+    if (selected.length === 1) {
+      return this.language.formatMonthId(selected[0]);
+    }
+    if (selected.length <= 3) {
+      return selected.map((id) => this.language.formatMonthId(id)).join(' · ');
+    }
+    return this.transloco.translate('expenses.monthsSelected', { count: selected.length });
   });
 
   readonly filteredExpenses = computed(() => {
     const category = this.categoryFilter();
-    const month = this.monthFilter();
+    const months = this.monthFilter();
     const status = this.statusFilter();
+    const monthSet = months.length > 0 ? new Set(months) : null;
 
     return this.expenses().filter((expense) => {
       if (category !== 'all' && expense.category !== category) {
         return false;
       }
-      if (month !== 'all' && !expense.date.startsWith(month)) {
-        return false;
+      if (monthSet) {
+        const expenseMonth = expense.date.slice(0, 7);
+        if (!monthSet.has(expenseMonth)) {
+          return false;
+        }
       }
       if (status === 'paid' && !expense.paid) {
         return false;
@@ -101,14 +117,14 @@ export class ExpensesPage {
   readonly hasActiveFilters = computed(
     () =>
       this.categoryFilter() !== 'all' ||
-      this.monthFilter() !== 'all' ||
+      this.monthFilter().length > 0 ||
       this.statusFilter() !== 'all',
   );
 
   readonly activeFilterCount = computed(() => {
     let n = 0;
     if (this.categoryFilter() !== 'all') n++;
-    if (this.monthFilter() !== 'all') n++;
+    if (this.monthFilter().length > 0) n++;
     if (this.statusFilter() !== 'all') n++;
     return n;
   });
@@ -135,7 +151,7 @@ export class ExpensesPage {
 
   openFilter(): void {
     this.draftCategory.set(this.categoryFilter());
-    this.draftMonth.set(this.monthFilter());
+    this.draftMonth.set([...this.monthFilter()]);
     this.draftStatus.set(this.statusFilter());
     this.filterOpen.set(true);
   }
@@ -146,33 +162,37 @@ export class ExpensesPage {
 
   applyFilter(): void {
     this.categoryFilter.set(this.draftCategory());
-    this.monthFilter.set(this.draftMonth());
+    this.monthFilter.set([...this.draftMonth()]);
     this.statusFilter.set(this.draftStatus());
     this.filterOpen.set(false);
   }
 
   clearFiltersInDialog(): void {
     this.draftCategory.set('all');
-    this.draftMonth.set('all');
+    this.draftMonth.set([]);
     this.draftStatus.set('all');
   }
 
   clearFilters(): void {
     this.categoryFilter.set('all');
-    this.monthFilter.set('all');
+    this.monthFilter.set([]);
     this.statusFilter.set('all');
     this.draftCategory.set('all');
-    this.draftMonth.set('all');
+    this.draftMonth.set([]);
     this.draftStatus.set('all');
   }
 
-  /** Desktop inline selects apply immediately. */
+  /** Desktop inline filters apply immediately. */
   setCategoryFilter(value: ExpenseCategoryFilter): void {
     this.categoryFilter.set(value);
   }
 
-  setMonthFilter(value: ExpenseMonthFilter): void {
-    this.monthFilter.set(value);
+  setMonthFilter(values: string[]): void {
+    this.monthFilter.set(values);
+  }
+
+  setDraftMonth(values: string[]): void {
+    this.draftMonth.set(values);
   }
 
   setStatusFilter(value: ExpenseStatusFilter): void {
@@ -184,7 +204,7 @@ export class ExpensesPage {
   }
 
   removeMonthFilter(): void {
-    this.monthFilter.set('all');
+    this.monthFilter.set([]);
   }
 
   removeStatusFilter(): void {

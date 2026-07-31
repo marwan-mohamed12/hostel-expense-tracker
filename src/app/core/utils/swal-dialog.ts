@@ -6,7 +6,7 @@ const deleteDialogClasses = {
   cancelButton: 'rounded-xl font-semibold',
 } as const;
 
-/** Destructive confirm dialog only. Success feedback uses ToastService (ngx-toastr). */
+/** Destructive confirm dialog only. Success feedback uses app ToastService. */
 export async function confirmDelete(options: {
   title: string;
   text?: string;

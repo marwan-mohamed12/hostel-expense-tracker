@@ -86,7 +86,7 @@ Every expense record must include:
 | Styling | **Tailwind CSS 4** | Via `@import 'tailwindcss'` + PostCSS plugin |
 | Forms | `@angular/forms` | Reactive forms for residents/expenses; template forms for quick payment edits |
 | Modals / confirmations | **SweetAlert2** | Destructive confirms only (not success feedback) |
-| Success / action toasts | **angular-toastify** | React-Toastify-style corner toasts; one sentence per toast |
+| Success / action toasts | **Custom ToastService** | Soft-ledger corner toasts (no third-party toast lib); one sentence per toast |
 | Routing | `@angular/router` | SPA client routes |
 | Rendering | **SPA only (no SSR)** | SSR was removed intentionally |
 | Persistence | **localStorage** | Client-side for v1; no backend yet |
@@ -104,16 +104,14 @@ Every expense record must include:
 - **Used for all destructive confirms:** delete month (Payments), remove resident (Residents), delete expense (Expenses).
 - Dialog copy is translated via Transloco at call sites (pass already-translated strings).
 - Do **not** use native `alert` / `confirm` / `prompt` in the app.
-- Do **not** use SweetAlert2 for success feedback — use app `ToastService` / angular-toastify instead.
+- Do **not** use SweetAlert2 for success feedback — use app `ToastService` instead.
 
-### Toast notifications (angular-toastify) notes
-- Package: `angular-toastify` (React Toastify clone for Angular).
-- Import `AngularToastifyModule` on the app shell; render once:
-  `<lib-toastify-toast-container [position] … />` in `app.html`.
-- Container options used: slide transition, ~2.8s autoClose, newestOnTop, preventDuplicates, no icon library.
-- Position is RTL-aware via signal: `top-left` when AR, `top-right` when EN.
-- Shared wrapper: `src/app/core/services/toast.service.ts` wraps library `ToastService` so call sites stay on one API.
-  - `success(message)` / `info(message)` / `error(message)` — **single sentence only** (no title + body).
+### Toast notifications (custom) notes
+- **No third-party toast library.** In-house stack:
+  - `src/app/core/services/toast.service.ts` — signal queue, auto-dismiss (~2.8s), max 4, prevent exact duplicates
+  - `src/app/shared/toast/toast-host.*` — host UI; mount once as `<app-toast-host />` in `app.html`
+- API: `success(message)` / `info(message)` / `error(message)` — **single sentence only** (no title + body).
+- Design matches the soft-ledger UI: rounded-2xl cards, brand/teal accents, emerald success / rose error, dark mode, RTL-aware corner (`ms-auto`), progress bar, dismiss control.
 - **Show success toasts after:**
   - Residents: create, update, remove, activate, deactivate
   - Expenses: create, update, remove, mark paid, mark unpaid
@@ -201,7 +199,7 @@ src/app/
     services/
       storage.service.ts # localStorage load/save
       hostel.store.ts    # Domain operations + signals
-      toast.service.ts   # angular-toastify wrapper (one-line messages)
+      toast.service.ts   # custom toast queue (one-line messages)
       theme.service.ts   # light/dark/system theme
       user-journey.service.ts  # guided product tour open/step + completion
     utils/
@@ -217,6 +215,8 @@ src/app/
     payments/            # Monthly payment tracking
     expenses/            # Expense management
   shared/
+    month-calendar-picker/  # Filter-style month calendar (icon → year grid)
+    toast/               # Custom toast host (design-matched)
     user-journey/        # Multi-step "How it works" modal walkthrough
 public/
   i18n/
@@ -315,7 +315,7 @@ Treat these as **done** unless asked to change them:
    - Edit / delete (SweetAlert2 confirm)
    - Quick **Mark paid** / **Mark unpaid** on list rows
    - **Categories:** presets + **add custom** (+ button on expense form); stored in `customCategories`
-   - **Expense history filters:** desktop shows an inline filter bar above the list; mobile uses filter icon → dialog → Apply, with removable chips
+   - **Expense history filters:** desktop shows an inline filter bar above the list; mobile uses filter icon → dialog → Apply, with removable chips; **month filter uses multi-select calendar picker** (shared `app-month-calendar-picker`) — activity months dotted; **All months** / **Clear months** reset selection
    - Filtered paid/unpaid sums in header
    - Only **paid** amounts reduce balance; unpaid totals shown separately
 
@@ -331,7 +331,9 @@ Treat these as **done** unless asked to change them:
 
 4b. **Resident payment history**
    - From Residents list: **History** opens a panel for that resident
-   - Filter: **All months** or a **specific month** (dropdown of months that have records)
+   - Filter: **All months** button, or a **year + 12-month calendar grid** with **multi-select** (tap to toggle months)
+   - Empty selection = all months; one or more selected months filter the list
+   - Months where the resident has payment activity are marked with a **dot** on the calendar
    - Shows payment rows (status, amount, paid date, notes) + summary counts/collected for the filter
 
 5. **Setup**
@@ -361,7 +363,7 @@ Treat these as **done** unless asked to change them:
    - Shared utilities: `.ui-card`, `.ui-btn-primary`, `.ui-input`, `.ui-chip`, `.ui-badge-*`, `.ui-empty`, `.ui-avatar`, `.ui-progress`
    - Font: **Plus Jakarta Sans** (loaded in `index.html`)
    - **Mobile (< md):** burger nav + card lists; **Desktop (md+):** pill nav + data tables
-4. Prefer **SweetAlert2** for destructive confirmations and **angular-toastify** (`ToastService`) for success/action feedback — never native `alert` / `confirm`. One short sentence per toast.
+4. Prefer **SweetAlert2** for destructive confirmations and custom **`ToastService`** for success/action feedback — never native `alert` / `confirm`. One short sentence per toast.
 5. Do **not** reintroduce SSR unless the user asks.
 6. Do **not** add a backend unless the user asks; localStorage is intentional for v1.
 7. Do **not** hardcode a single global fee of 250 as the only allowed amount; fee is per resident.
@@ -409,11 +411,14 @@ These are optional next steps, not commitments:
 13. **Dashboard header polish:** replaced muted “July 2026 · N active residents” subtitle with visible badges (solid teal month chip + soft teal active-residents chip) under the Dashboard title.
 14. **Unpaid expenses:** expenses have a `paid` flag. Unpaid expenses are tracked but **do not** subtract from balance left. Form checkbox + mark paid/unpaid actions; storage migrates missing `paid` → `true`.
 15. **i18n (Transloco):** English + Arabic runtime localization for the entire UI; language preference in localStorage; RTL for Arabic; month/category labels localized at display time.
-16. **Toast notifications:** first shipped with ngx-toastr (#7 / PR #8); later replaced with **angular-toastify** (PR follow-up) for cleaner React-Toastify-style UI and **one-sentence** messages only.
+16. **Toast notifications:** ngx-toastr → angular-toastify → **custom ToastService + toast-host** (soft-ledger UI, no toast library dependency); one-sentence messages only.
 17. **UI/UX redesign (soft ledger):** Plus Jakarta Sans, brand teal tokens, ambient canvas, glass sticky header with pill nav, dashboard balance hero + collection progress, payment progress bar, resident initials avatars, refined empty states with CTAs, shared `.ui-*` component classes for consistency.
 18. **Dark mode:** `ThemeService` (`light` | `dark` | `system`), preference key `hostel-expense-tracker-theme` in localStorage; FOUC-safe boot script in `index.html`; header icon cycles light → dark → system; Tailwind `@custom-variant dark` on `html.dark`; SweetAlert dark styles.
 19. **User journey:** guided product tour so new users understand features and workflow (residents → payments → expenses → dashboard); EN/AR; first-visit auto-open + header help + empty dashboard banner.
 20. **Phase 2 — organization & history:** expense categories (presets + custom); filter dialog on Expenses; dashboard compact month navigator; resident payment history panel on Residents.
+21. **Resident history calendar filter:** replaced the month `<select>` in payment history with a year + 12-month calendar grid; multi-select months (toggle); activity months marked with a dot; **All months** / **Unselect all** clear selection.
+22. **Custom toasts:** removed `angular-toastify`; in-house `ToastService` + `app-toast-host` matching soft-ledger design (success/info/error, dark mode, RTL).
+23. **Shared month calendar picker** (`app-month-calendar-picker`): expenses month filter (desktop + mobile dialog) uses calendar icon → year/month grid with activity dots instead of `<select>`.
 
 ---
 
@@ -433,7 +438,8 @@ These are optional next steps, not commitments:
 - `src/app/core/services/hostel.store.ts` — all domain logic
 - `src/app/core/constants/app.constants.ts` — defaults/categories/storage key
 - `src/app/core/utils/swal-dialog.ts` — shared SweetAlert2 destructive confirm helpers
-- `src/app/core/services/toast.service.ts` — angular-toastify wrapper (single-sentence success/info/error)
+- `src/app/core/services/toast.service.ts` — custom toast queue (single-sentence success/info/error)
+- `src/app/shared/toast/*` — toast host UI (design-matched)
 - `src/app/core/services/theme.service.ts` — light/dark/system theme preference + `html.dark`
 - `src/app/core/services/user-journey.service.ts` — guided tour open/step/completion state
 - `src/app/shared/user-journey/*` — multi-step how-it-works modal
@@ -447,8 +453,8 @@ These are optional next steps, not commitments:
 - `src/app/pages/payments/*`
 - `src/app/pages/expenses/*`
 - `package.json`, `angular.json` — SPA build (no SSR entries); SweetAlert2 CommonJS allowlist
-- `src/styles.css` — Tailwind 4 theme tokens, ambient canvas, shared `.ui-*` utilities, SweetAlert2 CSS (angular-toastify styles are component-scoped)
+- `src/styles.css` — Tailwind 4 theme tokens, ambient canvas, shared `.ui-*` utilities, SweetAlert2 CSS
 
 ---
 
-*Last updated: Phase 2 (structured expense categories, expense history filters, dashboard month switcher, resident payment history); user journey; dark mode; UI/UX redesign; angular-toastify + SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: Custom toasts (no angular-toastify); resident history multi-select calendar; Phase 2 filters/navigators; user journey; dark mode; UI/UX redesign; SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
