@@ -202,6 +202,8 @@ src/app/
       storage.service.ts # localStorage load/save
       hostel.store.ts    # Domain operations + signals
       toast.service.ts   # angular-toastify wrapper (one-line messages)
+      theme.service.ts   # light/dark/system theme
+      user-journey.service.ts  # guided product tour open/step + completion
     utils/
       swal-dialog.ts     # Shared SweetAlert2 confirm helpers (destructive only)
   models/
@@ -210,10 +212,12 @@ src/app/
     expense.model.ts
     app-data.model.ts    # AppData + DashboardStats
   pages/
-    dashboard/           # Home overview
+    dashboard/           # Home overview (+ empty-state journey banner)
     residents/           # Resident CRUD + active/inactive
     payments/            # Monthly payment tracking
     expenses/            # Expense management
+  shared/
+    user-journey/        # Multi-step "How it works" modal walkthrough
 public/
   i18n/
     en.json              # English UI strings
@@ -233,6 +237,25 @@ public/
 ### Storage
 - Key: `hostel-expense-tracker-data-v1` (see `STORAGE_KEY`)
 - Shape: `{ residents, months, payments, expenses }`
+- Theme preference: `hostel-expense-tracker-theme` (`light` | `dark` | `system`)
+- Language: `hostel-expense-tracker-lang` (`en` | `ar`)
+- User journey completed: `hostel-expense-tracker-journey-v1` (`done` when finished/skipped)
+
+### User journey (guided tour)
+- **Purpose:** Teach the real workflow so a new user knows what to do: residents → payments → expenses → dashboard balance.
+- **Service:** `UserJourneyService` (`src/app/core/services/user-journey.service.ts`)
+  - Signals: `isOpen`, `stepIndex`, `completed`
+  - `open(fromStart?)`, `next` / `prev` / `goToStep`, `completeAndClose`, `maybeAutoOpen`
+- **UI:** `UserJourneyComponent` (`src/app/shared/user-journey/`) — modal overlay, progress bar, step dots, Next/Back/Skip, optional “Open this page” deep link per feature step
+- **Steps (6):** welcome → residents → payments → expenses → dashboard → ready (tips: language, theme, reopen)
+- **Entry points:**
+  1. Auto-open on first visit (~600ms after shell load) if journey not completed
+  2. Header **?** button (always available)
+  3. Mobile nav item “How it works”
+  4. Dashboard banner when no active residents and tour not completed
+- **i18n:** all copy under `journey.*` in `en.json` / `ar.json` (Egyptian dialect for AR)
+- **Keyboard:** Escape skips/closes; arrow keys advance with RTL awareness
+- Do **not** use SweetAlert2 for the tour; keep it as the dedicated overlay component
 
 ---
 
@@ -311,6 +334,11 @@ Treat these as **done** unless asked to change them:
    - Arabic RTL (`dir="rtl"`) when AR is active
    - Localized month names and expense category display labels
 
+7. **User journey / how-it-works tour**
+   - First-visit multi-step modal: welcome → residents → payments → expenses → dashboard → ready
+   - Reopen via header **?** (and mobile nav); empty dashboard banner when no active residents
+   - Completion stored in localStorage (`hostel-expense-tracker-journey-v1`)
+
 ---
 
 ## 8. Working conventions for agents
@@ -374,6 +402,7 @@ These are optional next steps, not commitments:
 16. **Toast notifications:** first shipped with ngx-toastr (#7 / PR #8); later replaced with **angular-toastify** (PR follow-up) for cleaner React-Toastify-style UI and **one-sentence** messages only.
 17. **UI/UX redesign (soft ledger):** Plus Jakarta Sans, brand teal tokens, ambient canvas, glass sticky header with pill nav, dashboard balance hero + collection progress, payment progress bar, resident initials avatars, refined empty states with CTAs, shared `.ui-*` component classes for consistency.
 18. **Dark mode:** `ThemeService` (`light` | `dark` | `system`), preference key `hostel-expense-tracker-theme` in localStorage; FOUC-safe boot script in `index.html`; header icon cycles light → dark → system; Tailwind `@custom-variant dark` on `html.dark`; SweetAlert dark styles.
+19. **User journey:** guided product tour so new users understand features and workflow (residents → payments → expenses → dashboard); EN/AR; first-visit auto-open + header help + empty dashboard banner.
 
 ---
 
@@ -395,9 +424,11 @@ These are optional next steps, not commitments:
 - `src/app/core/utils/swal-dialog.ts` — shared SweetAlert2 destructive confirm helpers
 - `src/app/core/services/toast.service.ts` — angular-toastify wrapper (single-sentence success/info/error)
 - `src/app/core/services/theme.service.ts` — light/dark/system theme preference + `html.dark`
+- `src/app/core/services/user-journey.service.ts` — guided tour open/step/completion state
+- `src/app/shared/user-journey/*` — multi-step how-it-works modal
 - `src/app/core/i18n/language.service.ts` — language preference, RTL, month/category formatting
 - `src/app/core/i18n/transloco-loader.ts` — translation file loader
-- `public/i18n/en.json`, `public/i18n/ar.json` — UI translation dictionaries
+- `public/i18n/en.json`, `public/i18n/ar.json` — UI translation dictionaries (`journey.*` for tour)
 - `src/app/models/*` — data shapes
 - `src/app/app.routes.ts` — navigation
 - `src/app/pages/dashboard/*`
@@ -409,4 +440,4 @@ These are optional next steps, not commitments:
 
 ---
 
-*Last updated: dark mode (light/dark/system + FOUC-safe boot); UI/UX redesign; angular-toastify + SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: user journey / how-it-works guided tour; dark mode; UI/UX redesign; angular-toastify + SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*

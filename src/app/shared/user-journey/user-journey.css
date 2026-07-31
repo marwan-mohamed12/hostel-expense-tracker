@@ -1,0 +1,307 @@
+.journey-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 0.45);
+  backdrop-filter: blur(6px);
+  animation: journey-fade-in 0.2s ease-out;
+}
+
+@media (min-width: 640px) {
+  .journey-backdrop {
+    align-items: center;
+    padding: 1.5rem;
+  }
+}
+
+/* html.dark lives outside the component — use :host-context so emulated
+   encapsulation still matches the app theme. */
+:host-context(html.dark) .journey-backdrop {
+  background: rgb(0 0 0 / 0.78);
+}
+
+.journey-panel {
+  position: relative;
+  width: 100%;
+  max-width: 32rem;
+  max-height: min(90dvh, 40rem);
+  overflow: auto;
+  border-radius: 1.5rem;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  background: #fff;
+  color: #0f172a;
+  box-shadow:
+    0 0 0 1px rgb(15 23 42 / 0.04),
+    0 24px 48px -12px rgb(15 23 42 / 0.28);
+  animation: journey-rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:host-context(html.dark) .journey-panel {
+  border-color: rgb(255 255 255 / 0.08);
+  background: #0a0c10;
+  color: #f1f5f9;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.8),
+    0 24px 64px -12px rgb(0 0 0 / 0.95),
+    0 0 0 1px rgb(20 184 166 / 0.06);
+}
+
+.journey-progress {
+  height: 3px;
+  background: rgb(241 245 249);
+  overflow: hidden;
+}
+
+:host-context(html.dark) .journey-progress {
+  background: rgb(255 255 255 / 0.06);
+}
+
+.journey-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0d9488, #22d3ee);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:host-context(html.dark) .journey-progress-bar {
+  background: linear-gradient(90deg, #0f766e, #0891b2);
+}
+
+.journey-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.journey-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+:host-context(html.dark) .journey-eyebrow {
+  color: #2dd4bf;
+}
+
+.journey-step-count {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: #64748b;
+}
+
+:host-context(html.dark) .journey-step-count {
+  color: #8b95a5;
+}
+
+.journey-title {
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #0f172a;
+}
+
+:host-context(html.dark) .journey-title {
+  color: #f8fafc;
+}
+
+.journey-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem 0;
+}
+
+.journey-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  background: #e2e8f0;
+  cursor: pointer;
+  transition:
+    width 0.2s ease,
+    background 0.2s ease;
+}
+
+:host-context(html.dark) .journey-dot {
+  background: rgb(255 255 255 / 0.14);
+}
+
+.journey-dot-done {
+  background: #5eead4;
+}
+
+:host-context(html.dark) .journey-dot-done {
+  background: #0f766e;
+}
+
+.journey-dot-active {
+  width: 1.35rem;
+  background: #0d9488;
+}
+
+:host-context(html.dark) .journey-dot-active {
+  background: #14b8a6;
+  box-shadow: 0 0 0 2px rgb(20 184 166 / 0.25);
+}
+
+.journey-body {
+  padding: 1rem 1.25rem 0.5rem;
+}
+
+.journey-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 0.85rem;
+  border-radius: 1rem;
+  color: #0f766e;
+  background: linear-gradient(145deg, #ccfbf1, #f0fdfa);
+  box-shadow: inset 0 0 0 1px rgb(13 148 136 / 0.12);
+}
+
+:host-context(html.dark) .journey-icon {
+  color: #5eead4;
+  background: linear-gradient(145deg, rgb(4 47 46 / 0.95), rgb(2 12 16 / 0.95));
+  box-shadow:
+    inset 0 0 0 1px rgb(20 184 166 / 0.22),
+    0 0 24px rgb(13 148 136 / 0.12);
+}
+
+.journey-lead {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+:host-context(html.dark) .journey-lead {
+  color: #cbd5e1;
+}
+
+.journey-bullets {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.journey-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+:host-context(html.dark) .journey-bullets li {
+  color: #a1aab8;
+}
+
+.journey-bullet-mark {
+  flex-shrink: 0;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-top: 0.4rem;
+  border-radius: 999px;
+  background: #14b8a6;
+  box-shadow: 0 0 0 3px rgb(20 184 166 / 0.15);
+}
+
+:host-context(html.dark) .journey-bullet-mark {
+  background: #2dd4bf;
+  box-shadow: 0 0 0 3px rgb(20 184 166 / 0.2);
+}
+
+.journey-open-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding: 0.4rem 0.15rem;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f766e;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.journey-open-page:hover {
+  color: #115e59;
+}
+
+:host-context(html.dark) .journey-open-page {
+  color: #2dd4bf;
+}
+
+:host-context(html.dark) .journey-open-page:hover {
+  color: #5eead4;
+}
+
+.journey-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid rgb(241 245 249);
+  margin-top: 0.75rem;
+  background: rgb(248 250 252 / 0.6);
+}
+
+:host-context(html.dark) .journey-footer {
+  border-top-color: rgb(255 255 255 / 0.06);
+  background: rgb(0 0 0 / 0.35);
+}
+
+@keyframes journey-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes journey-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-backdrop,
+  .journey-panel,
+  .journey-progress-bar,
+  .journey-dot {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -19,10 +19,34 @@ const en = {
     toggleMenu: 'Toggle navigation menu',
   },
   lang: { switchTo: 'العربية', switchToEn: 'English', aria: 'Switch language' },
+  theme: {
+    ariaLight: 'Theme: light',
+    ariaDark: 'Theme: dark',
+    ariaSystem: 'Theme: system',
+  },
+  journey: {
+    openAria: 'Open guided tour',
+    navLabel: 'How it works',
+  },
 };
 
 describe('App', () => {
   beforeEach(async () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        dispatchEvent: () => false,
+      }),
+    });
+
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
