@@ -23,6 +23,9 @@ export class DashboardPage {
   /** Selected month for monthly history (defaults to current). */
   readonly selectedMonthId = signal(this.store.ensureCurrentMonth().id);
 
+  /** Compact month picker open state. */
+  readonly monthPickerOpen = signal(false);
+
   readonly months = this.store.monthsNewestFirst;
 
   readonly monthButtons = computed(() => {
@@ -34,7 +37,6 @@ export class DashboardPage {
   });
 
   readonly stats = computed(() => {
-    // Recompute labels when language changes.
     this.language.lang();
     this.transloco.getActiveLang();
     const base = this.store.getDashboardStats(this.selectedMonthId());
@@ -52,7 +54,6 @@ export class DashboardPage {
       .slice(0, 5);
   });
 
-  /** Show soft CTA when tour not completed and user has little data yet. */
   readonly showJourneyBanner = computed(() => {
     if (this.journey.completed() || this.bannerDismissed() || this.journey.isOpen()) {
       return false;
@@ -72,7 +73,6 @@ export class DashboardPage {
       }));
   });
 
-  /** Share of active residents paid this month (0–100). */
   readonly paidProgress = computed(() => {
     const s = this.stats();
     const total = s.paidCount + s.unpaidCount;
@@ -85,6 +85,36 @@ export class DashboardPage {
   selectMonth(monthId: string): void {
     this.store.ensureMonth(monthId);
     this.selectedMonthId.set(monthId);
+    this.monthPickerOpen.set(false);
+  }
+
+  /** Move one calendar month (creates shell if needed). */
+  shiftMonth(delta: number): void {
+    const id = this.selectedMonthId();
+    let year = Number(id.slice(0, 4));
+    let month = Number(id.slice(5, 7)) + delta;
+    while (month < 1) {
+      month += 12;
+      year -= 1;
+    }
+    while (month > 12) {
+      month -= 12;
+      year += 1;
+    }
+    this.selectMonth(`${year}-${String(month).padStart(2, '0')}`);
+  }
+
+  toggleMonthPicker(): void {
+    this.monthPickerOpen.update((open) => !open);
+  }
+
+  closeMonthPicker(): void {
+    this.monthPickerOpen.set(false);
+  }
+
+  categoryLabel(category: string): string {
+    this.language.lang();
+    return this.language.categoryLabel(category);
   }
 
   openJourney(): void {
@@ -93,7 +123,6 @@ export class DashboardPage {
 
   dismissBanner(): void {
     this.bannerDismissed.set(true);
-    // Remember skip so first-visit auto-open does not nag on reload.
     this.journey.completeAndClose();
   }
 

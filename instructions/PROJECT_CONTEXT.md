@@ -44,7 +44,7 @@ This is a practical internal tool for a hostel, not a multi-tenant SaaS product 
 ### Expenses
 Every expense record must include:
 - **title**
-- **category** — **structured preset only** (not free text): Electricity, Water, Gas, Internet, Repairs, Cleaning, Supplies, Other. Stored as English keys; displayed via `categories.*` i18n. Unknown/legacy free-text values migrate to `Other` on load (`normalizeExpenseCategory`).
+- **category** — built-in presets (Electricity, Water, Gas, Internet, Repairs, Cleaning, Supplies, Other) **plus user-defined categories** added while creating/editing an expense. Built-ins stored as English keys and shown via `categories.*` i18n; custom labels display as entered. Persisted in `AppData.customCategories`.
 - **amount**
 - **date**
 - **description**
@@ -312,13 +312,13 @@ Treat these as **done** unless asked to change them:
    - Record title, category, amount, date, description, added by, **paid/unpaid**
    - Edit / delete (SweetAlert2 confirm)
    - Quick **Mark paid** / **Mark unpaid** on list rows
-   - **Structured categories only** (select presets; typed `ExpenseCategory`)
-   - **Expense history filters:** category chips (e.g. all Gas), month, paid/unpaid status
-   - Category breakdown totals (click to filter); filtered paid/unpaid sums in header
+   - **Categories:** presets + **add custom** (+ button on expense form); stored in `customCategories`
+   - **Expense history filters:** filter icon opens a dialog (category / month / status) → Apply; active filters as removable chips
+   - Filtered paid/unpaid sums in header
    - Only **paid** amounts reduce balance; unpaid totals shown separately
 
 4. **Dashboard (home)**
-   - **Monthly history switcher** — pick any open month; stats / unpaid list / recent expenses follow selection
+   - **Month navigator** — compact prev / label / next control in the header; click label for a month dropdown; stats / unpaid list / recent expenses follow selection
    - Paid / not paid (selected month)
    - Collected (selected month)
    - Paid expenses (selected month) + unpaid note when applicable
@@ -410,7 +410,7 @@ These are optional next steps, not commitments:
 17. **UI/UX redesign (soft ledger):** Plus Jakarta Sans, brand teal tokens, ambient canvas, glass sticky header with pill nav, dashboard balance hero + collection progress, payment progress bar, resident initials avatars, refined empty states with CTAs, shared `.ui-*` component classes for consistency.
 18. **Dark mode:** `ThemeService` (`light` | `dark` | `system`), preference key `hostel-expense-tracker-theme` in localStorage; FOUC-safe boot script in `index.html`; header icon cycles light → dark → system; Tailwind `@custom-variant dark` on `html.dark`; SweetAlert dark styles.
 19. **User journey:** guided product tour so new users understand features and workflow (residents → payments → expenses → dashboard); EN/AR; first-visit auto-open + header help + empty dashboard banner.
-20. **Phase 2 — organization & history:** typed expense categories + migration; expense history filters (category / month / status) + category totals; dashboard monthly history switcher; resident payment history panel on Residents.
+20. **Phase 2 — organization & history:** expense categories (presets + custom); filter dialog on Expenses; dashboard compact month navigator; resident payment history panel on Residents.
 
 ---
 

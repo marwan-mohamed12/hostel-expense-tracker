@@ -37,23 +37,103 @@
       <p class="ui-eyebrow">{{ 'dashboard.eyebrow' | transloco }}</p>
       <h1 class="ui-title">{{ 'dashboard.title' | transloco }}</h1>
       <div class="mt-3 flex flex-wrap items-center gap-2">
-        <span
-          class="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1 text-sm font-semibold text-white shadow-sm shadow-brand-600/25 dark:bg-brand-500"
-        >
-          <svg
-            class="size-3.5 shrink-0 opacity-90"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
+        <!-- Compact month navigator: prev / pick / next -->
+        <div class="relative z-30 inline-flex items-center rounded-full bg-brand-600 p-0.5 shadow-sm shadow-brand-600/25 dark:bg-brand-500">
+          <button
+            type="button"
+            (click)="shiftMonth(-1)"
+            class="flex size-8 items-center justify-center rounded-full text-white/90 transition hover:bg-white/15 hover:text-white"
+            [attr.aria-label]="'dashboard.prevMonth' | transloco"
           >
-            <path
-              fill-rule="evenodd"
-              d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          {{ stats().monthLabel }}
-        </span>
+            <svg class="size-4 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path
+                fill-rule="evenodd"
+                d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            (click)="toggleMonthPicker()"
+            class="inline-flex min-w-[8.5rem] items-center justify-center gap-1.5 px-2 py-1.5 text-sm font-semibold text-white"
+            [attr.aria-expanded]="monthPickerOpen()"
+            [attr.aria-label]="'dashboard.pickMonth' | transloco"
+          >
+            <svg class="size-3.5 shrink-0 opacity-90" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path
+                fill-rule="evenodd"
+                d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            {{ stats().monthLabel }}
+            <svg class="size-3.5 opacity-80" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path
+                fill-rule="evenodd"
+                d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            (click)="shiftMonth(1)"
+            class="flex size-8 items-center justify-center rounded-full text-white/90 transition hover:bg-white/15 hover:text-white"
+            [attr.aria-label]="'dashboard.nextMonth' | transloco"
+          >
+            <svg class="size-4 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path
+                fill-rule="evenodd"
+                d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+
+          @if (monthPickerOpen()) {
+            <div
+              class="absolute start-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-white/10 dark:bg-[#0a0c10]"
+              role="listbox"
+              [attr.aria-label]="'dashboard.pickMonth' | transloco"
+              (click)="$event.stopPropagation()"
+            >
+              <p class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                {{ 'dashboard.monthHistory' | transloco }}
+              </p>
+              <div class="max-h-56 overflow-y-auto">
+                @for (month of monthButtons(); track month.id) {
+                  <button
+                    type="button"
+                    role="option"
+                    (click)="selectMonth(month.id)"
+                    class="flex w-full items-center justify-between px-3 py-2 text-start text-sm transition hover:bg-brand-50 dark:hover:bg-brand-950/40"
+                    [class.bg-brand-50]="selectedMonthId() === month.id"
+                    [class.font-semibold]="selectedMonthId() === month.id"
+                    [class.text-brand-800]="selectedMonthId() === month.id"
+                    [class.dark:bg-brand-950/40]="selectedMonthId() === month.id"
+                    [class.dark:text-brand-200]="selectedMonthId() === month.id"
+                    [attr.aria-selected]="selectedMonthId() === month.id"
+                  >
+                    {{ month.displayLabel }}
+                    @if (selectedMonthId() === month.id) {
+                      <svg class="size-4 text-brand-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path
+                          fill-rule="evenodd"
+                          d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    }
+                  </button>
+                }
+                @if (monthButtons().length === 0) {
+                  <p class="px-3 py-2 text-sm text-slate-500">{{ 'payments.noMonths' | transloco }}</p>
+                }
+              </div>
+            </div>
+          }
+        </div>
         <span class="ui-badge ui-badge-brand">
           <span class="size-1.5 rounded-full bg-brand-500" aria-hidden="true"></span>
           {{ 'dashboard.activeResidents' | transloco: { count: stats().activeResidents } }}
@@ -75,33 +155,14 @@
     </div>
   </div>
 
-  <!-- Monthly history switcher -->
-  <article class="ui-card p-4 sm:p-5">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-500">
-        {{ 'dashboard.monthHistory' | transloco }}
-      </h2>
-      <p class="text-xs text-slate-500 dark:text-zinc-500">
-        {{ 'dashboard.monthHistoryHint' | transloco }}
-      </p>
-    </div>
-    <div class="mt-3 flex flex-wrap gap-2">
-      @for (month of monthButtons(); track month.id) {
-        <button
-          type="button"
-          (click)="selectMonth(month.id)"
-          class="ui-chip"
-          [class.ui-chip-active]="selectedMonthId() === month.id"
-          [class.ui-chip-idle]="selectedMonthId() !== month.id"
-        >
-          {{ month.displayLabel }}
-        </button>
-      }
-      @if (monthButtons().length === 0) {
-        <p class="text-sm text-slate-500 dark:text-zinc-500">{{ 'payments.noMonths' | transloco }}</p>
-      }
-    </div>
-  </article>
+  @if (monthPickerOpen()) {
+    <button
+      type="button"
+      class="fixed inset-0 z-20 cursor-default bg-transparent"
+      [attr.aria-label]="'common.cancel' | transloco"
+      (click)="closeMonthPicker()"
+    ></button>
+  }
 
   <!-- Hero: balance + month collection progress -->
   <div
@@ -382,7 +443,7 @@
                 <div class="min-w-0">
                   <p class="ui-text-secondary truncate font-medium">{{ expense.title }}</p>
                   <p class="ui-text-muted mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs">
-                    <span>{{ ('categories.' + expense.category) | transloco }}</span>
+                    <span>{{ categoryLabel(expense.category) }}</span>
                     <span aria-hidden="true">·</span>
                     <span>{{ expense.date | date: 'mediumDate' }}</span>
                     @if (!expense.paid) {

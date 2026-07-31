@@ -1,10 +1,8 @@
-import { ExpenseCategory } from '../core/constants/app.constants';
-
 export interface Expense {
   id: string;
   title: string;
-  /** Structured preset only (Electricity, Water, Gas, …). */
-  category: ExpenseCategory;
+  /** Built-in preset or user-defined category label. */
+  category: string;
   amount: number;
   date: string;
   description: string;

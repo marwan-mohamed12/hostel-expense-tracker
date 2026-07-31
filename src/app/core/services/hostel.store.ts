@@ -1,6 +1,7 @@
 ﻿import { computed, Injectable, signal } from '@angular/core';
 import {
   DEFAULT_MONTHLY_FEE,
+  EXPENSE_CATEGORIES,
   MONTH_NAMES,
   normalizeExpenseCategory,
 } from '../constants/app.constants';
@@ -38,11 +39,13 @@ export class HostelStore {
   private readonly monthsSignal = signal<MonthRecord[]>([]);
   private readonly paymentsSignal = signal<Payment[]>([]);
   private readonly expensesSignal = signal<Expense[]>([]);
+  private readonly customCategoriesSignal = signal<string[]>([]);
 
   readonly residents = this.residentsSignal.asReadonly();
   readonly months = this.monthsSignal.asReadonly();
   readonly payments = this.paymentsSignal.asReadonly();
   readonly expenses = this.expensesSignal.asReadonly();
+  readonly customCategories = this.customCategoriesSignal.asReadonly();
 
   readonly activeResidents = computed(() =>
     this.residentsSignal().filter((resident) => resident.active),
@@ -56,13 +59,59 @@ export class HostelStore {
     [...this.expensesSignal()].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)),
   );
 
+  /**
+   * All categories for pickers: built-in presets first, then custom (A–Z).
+   * Includes any category still referenced by an expense.
+   */
+  readonly allCategories = computed(() => {
+    const custom = this.customCategoriesSignal();
+    const fromExpenses = this.expensesSignal().map((e) => e.category);
+    const seen = new Set<string>();
+    const result: string[] = [];
+
+    for (const name of [...EXPENSE_CATEGORIES, ...custom, ...fromExpenses]) {
+      const normalized = normalizeExpenseCategory(name);
+      const key = normalized.toLowerCase();
+      if (!normalized || seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      result.push(normalized);
+    }
+    return result;
+  });
+
   constructor(private readonly storage: StorageService) {
     const data = this.storage.load();
     this.residentsSignal.set(data.residents);
     this.monthsSignal.set(data.months);
     this.paymentsSignal.set(data.payments);
     this.expensesSignal.set(data.expenses);
+    this.customCategoriesSignal.set(data.customCategories ?? []);
     this.ensureCurrentMonth();
+  }
+
+  /**
+   * Register a category (built-in or custom). Returns the canonical name.
+   * Custom names are persisted for future expense forms.
+   */
+  addCategory(name: string): string {
+    const normalized = normalizeExpenseCategory(name);
+    const isBuiltin = EXPENSE_CATEGORIES.some(
+      (c) => c.toLowerCase() === normalized.toLowerCase(),
+    );
+    if (!isBuiltin) {
+      const exists = this.customCategoriesSignal().some(
+        (c) => c.toLowerCase() === normalized.toLowerCase(),
+      );
+      if (!exists) {
+        this.customCategoriesSignal.update((list) =>
+          [...list, normalized].sort((a, b) => a.localeCompare(b)),
+        );
+        this.persist();
+      }
+    }
+    return normalized;
   }
 
   // --- Residents ---
@@ -258,10 +307,11 @@ export class HostelStore {
 
   addExpense(input: ExpenseInput): Expense {
     const timestamp = nowIso();
+    const category = this.addCategory(String(input.category ?? ''));
     const expense: Expense = {
       id: createId(),
       title: String(input.title ?? '').trim(),
-      category: normalizeExpenseCategory(input.category),
+      category,
       amount: Number(input.amount) || 0,
       date: input.date || todayDate(),
       description: String(input.description ?? '').trim(),
@@ -277,6 +327,7 @@ export class HostelStore {
   }
 
   updateExpense(id: string, input: ExpenseInput): void {
+    const category = this.addCategory(String(input.category ?? ''));
     this.expensesSignal.update((list) =>
       list.map((expense) => {
         if (expense.id !== id) {
@@ -285,7 +336,7 @@ export class HostelStore {
         return {
           ...expense,
           title: String(input.title ?? '').trim(),
-          category: normalizeExpenseCategory(input.category),
+          category,
           amount: Number(input.amount) || 0,
           date: input.date,
           description: String(input.description ?? '').trim(),
@@ -471,6 +522,7 @@ export class HostelStore {
       months: this.monthsSignal(),
       payments: this.paymentsSignal(),
       expenses: this.expensesSignal(),
+      customCategories: this.customCategoriesSignal(),
     });
   }
 }

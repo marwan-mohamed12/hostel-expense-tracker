@@ -60,17 +60,56 @@
           }
         </label>
 
-        <label class="block">
+        <div class="block">
           <span class="ui-label">{{ 'expenses.categoryRequired' | transloco }}</span>
-          <select formControlName="category" class="ui-input">
-            @for (category of categories; track category) {
-              <option [value]="category">{{ ('categories.' + category) | transloco }}</option>
-            }
-          </select>
-          <p class="mt-1.5 text-xs text-slate-500 dark:text-zinc-500">
-            {{ 'expenses.categoryHint' | transloco }}
-          </p>
-        </label>
+          <div class="flex gap-2">
+            <select formControlName="category" class="ui-input min-w-0 flex-1">
+              @for (category of categories(); track category) {
+                <option [value]="category">{{ categoryLabel(category) }}</option>
+              }
+            </select>
+            <button
+              type="button"
+              (click)="toggleNewCategory()"
+              class="ui-btn-secondary shrink-0 px-3"
+              [attr.aria-expanded]="showNewCategory()"
+              [attr.aria-label]="'expenses.addCategory' | transloco"
+            >
+              <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path
+                  d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"
+                />
+              </svg>
+            </button>
+          </div>
+          @if (showNewCategory()) {
+            <div
+              class="mt-2 flex flex-col gap-2 rounded-xl border border-brand-200/80 bg-brand-50/50 p-3 dark:border-brand-800/40 dark:bg-brand-950/30 sm:flex-row sm:items-center"
+            >
+              <input
+                type="text"
+                class="ui-input min-w-0 flex-1"
+                [value]="newCategoryName()"
+                (input)="newCategoryName.set($any($event.target).value)"
+                (keydown.enter)="$event.preventDefault(); addNewCategory()"
+                [placeholder]="'expenses.categoryNamePlaceholder' | transloco"
+                [attr.aria-label]="'expenses.addCategory' | transloco"
+              />
+              <div class="flex gap-2">
+                <button type="button" (click)="addNewCategory()" class="ui-btn-primary ui-btn-sm">
+                  {{ 'expenses.addCategory' | transloco }}
+                </button>
+                <button type="button" (click)="toggleNewCategory()" class="ui-btn-ghost ui-btn-sm">
+                  {{ 'common.cancel' | transloco }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <p class="mt-1.5 text-xs text-slate-500 dark:text-zinc-500">
+              {{ 'expenses.categoryHint' | transloco }}
+            </p>
+          }
+        </div>
 
         <label class="block">
           <span class="ui-label">{{ 'expenses.amountRequired' | transloco }}</span>
@@ -157,127 +196,196 @@
     </form>
   }
 
-  <!-- History filters -->
-  <article class="ui-card p-4 sm:p-5">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-zinc-500">
-        {{ 'expenses.historyFilters' | transloco }}
-      </h2>
-      @if (hasActiveFilters()) {
-        <button type="button" (click)="clearFilters()" class="ui-btn-ghost ui-btn-sm">
-          {{ 'expenses.clearFilters' | transloco }}
-        </button>
+  <!-- Compact filter bar -->
+  <div class="flex flex-wrap items-center gap-2">
+    <button
+      type="button"
+      (click)="openFilter()"
+      class="ui-btn-secondary relative"
+      [attr.aria-label]="'expenses.openFilters' | transloco"
+    >
+      <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path
+          fill-rule="evenodd"
+          d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 0 1 .628.74v2.288a2.25 2.25 0 0 1-.659 1.59l-4.682 4.683a2.25 2.25 0 0 0-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 0 1 8 18.25v-5.757a2.25 2.25 0 0 0-.659-1.591L2.659 6.22A2.25 2.25 0 0 1 2 4.629V2.34a.75.75 0 0 1 .628-.74Z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      {{ 'expenses.filters' | transloco }}
+      @if (activeFilterCount() > 0) {
+        <span
+          class="absolute -end-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white shadow-sm"
+        >
+          {{ activeFilterCount() }}
+        </span>
       }
-    </div>
+    </button>
 
-    <div class="mt-4 space-y-4">
-      <div>
-        <p class="mb-2 text-xs font-semibold text-slate-600 dark:text-zinc-400">
-          {{ 'common.category' | transloco }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <button
-            type="button"
-            (click)="setCategoryFilter('all')"
-            class="ui-chip"
-            [class.ui-chip-active]="categoryFilter() === 'all'"
-            [class.ui-chip-idle]="categoryFilter() !== 'all'"
-          >
-            {{ 'common.all' | transloco }}
-          </button>
-          @for (category of categories; track category) {
-            <button
-              type="button"
-              (click)="setCategoryFilter(category)"
-              class="ui-chip"
-              [class.ui-chip-active]="categoryFilter() === category"
-              [class.ui-chip-idle]="categoryFilter() !== category"
-            >
-              {{ ('categories.' + category) | transloco }}
-            </button>
-          }
-        </div>
-      </div>
-
-      <div>
-        <p class="mb-2 text-xs font-semibold text-slate-600 dark:text-zinc-400">
-          {{ 'common.month' | transloco }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <button
-            type="button"
-            (click)="setMonthFilter('all')"
-            class="ui-chip"
-            [class.ui-chip-active]="monthFilter() === 'all'"
-            [class.ui-chip-idle]="monthFilter() !== 'all'"
-          >
-            {{ 'expenses.allMonths' | transloco }}
-          </button>
-          @for (month of monthOptions(); track month.id) {
-            <button
-              type="button"
-              (click)="setMonthFilter(month.id)"
-              class="ui-chip"
-              [class.ui-chip-active]="monthFilter() === month.id"
-              [class.ui-chip-idle]="monthFilter() !== month.id"
-            >
-              {{ month.label }}
-            </button>
-          }
-        </div>
-      </div>
-
-      <div>
-        <p class="mb-2 text-xs font-semibold text-slate-600 dark:text-zinc-400">
-          {{ 'common.status' | transloco }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-          @for (option of statusOptions; track option.id) {
-            <button
-              type="button"
-              (click)="setStatusFilter(option.id)"
-              class="ui-chip"
-              [class.ui-chip-active]="statusFilter() === option.id"
-              [class.ui-chip-idle]="statusFilter() !== option.id"
-            >
-              {{ option.labelKey | transloco }}
-            </button>
-          }
-        </div>
-      </div>
-    </div>
-
-    @if (categoryBreakdown().length > 0) {
-      <div class="mt-5 border-t border-slate-100 pt-4 dark:border-white/[0.06]">
-        <p class="mb-2 text-xs font-semibold text-slate-600 dark:text-zinc-400">
-          {{ 'expenses.byCategory' | transloco }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-          @for (row of categoryBreakdown(); track row.category) {
-            <button
-              type="button"
-              (click)="setCategoryFilter(row.category)"
-              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800 dark:border-white/10 dark:bg-[#12151c] dark:text-zinc-300 dark:hover:border-brand-700/50 dark:hover:bg-brand-950/40 dark:hover:text-brand-200"
-              [class.ring-2]="categoryFilter() === row.category"
-              [class.ring-brand-500]="categoryFilter() === row.category"
-            >
-              <span>{{ ('categories.' + row.category) | transloco }}</span>
-              <span class="tabular-nums text-slate-500 dark:text-zinc-500">{{ row.count }}</span>
-              <span class="tabular-nums text-rose-700 dark:text-rose-300">
-                {{ row.total | currency: 'EGP':'symbol-narrow':'1.0-2' }}
-              </span>
-            </button>
-          }
-        </div>
-      </div>
+    @if (categoryFilter() !== 'all') {
+      <button
+        type="button"
+        (click)="removeCategoryFilter()"
+        class="ui-badge ui-badge-brand gap-1.5 pe-1.5"
+      >
+        {{ categoryLabel(categoryFilter()) }}
+        <span class="rounded-full p-0.5 hover:bg-brand-200/60 dark:hover:bg-brand-800/60" aria-hidden="true">
+          <svg class="size-3" viewBox="0 0 12 12" fill="currentColor">
+            <path
+              d="M3.28 2.22a.75.75 0 0 0-1.06 1.06L4.94 6 2.22 8.72a.75.75 0 1 0 1.06 1.06L6 7.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L7.06 6l2.72-2.72a.75.75 0 0 0-1.06-1.06L6 4.94 3.28 2.22Z"
+            />
+          </svg>
+        </span>
+      </button>
     }
-  </article>
+    @if (monthFilter() !== 'all') {
+      <button type="button" (click)="removeMonthFilter()" class="ui-badge ui-badge-brand gap-1.5 pe-1.5">
+        {{ language.formatMonthId(monthFilter()) }}
+        <span class="rounded-full p-0.5 hover:bg-brand-200/60 dark:hover:bg-brand-800/60" aria-hidden="true">
+          <svg class="size-3" viewBox="0 0 12 12" fill="currentColor">
+            <path
+              d="M3.28 2.22a.75.75 0 0 0-1.06 1.06L4.94 6 2.22 8.72a.75.75 0 1 0 1.06 1.06L6 7.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L7.06 6l2.72-2.72a.75.75 0 0 0-1.06-1.06L6 4.94 3.28 2.22Z"
+            />
+          </svg>
+        </span>
+      </button>
+    }
+    @if (statusFilter() !== 'all') {
+      <button type="button" (click)="removeStatusFilter()" class="ui-badge ui-badge-brand gap-1.5 pe-1.5">
+        {{ (statusFilter() === 'paid' ? 'common.paid' : 'common.unpaid') | transloco }}
+        <span class="rounded-full p-0.5 hover:bg-brand-200/60 dark:hover:bg-brand-800/60" aria-hidden="true">
+          <svg class="size-3" viewBox="0 0 12 12" fill="currentColor">
+            <path
+              d="M3.28 2.22a.75.75 0 0 0-1.06 1.06L4.94 6 2.22 8.72a.75.75 0 1 0 1.06 1.06L6 7.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L7.06 6l2.72-2.72a.75.75 0 0 0-1.06-1.06L6 4.94 3.28 2.22Z"
+            />
+          </svg>
+        </span>
+      </button>
+    }
 
-  <div class="flex flex-wrap items-center justify-between gap-2">
-    <p class="text-xs font-medium tabular-nums text-slate-500 dark:text-zinc-500">
+    @if (hasActiveFilters()) {
+      <button type="button" (click)="clearFilters()" class="ui-btn-ghost ui-btn-sm">
+        {{ 'expenses.clearFilters' | transloco }}
+      </button>
+    }
+
+    <p class="ms-auto text-xs font-medium tabular-nums text-slate-500 dark:text-zinc-500">
       {{ 'expenses.showingCount' | transloco: { count: filteredExpenses().length } }}
     </p>
   </div>
+
+  <!-- Filter dialog -->
+  @if (filterOpen()) {
+    <div
+      class="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-[2px] sm:items-center sm:p-4 dark:bg-black/60"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="'expenses.filterDialogTitle' | transloco"
+      (click)="closeFilter()"
+    >
+      <div
+        class="ui-card flex w-full max-w-md flex-col overflow-hidden rounded-t-2xl sm:rounded-2xl"
+        (click)="$event.stopPropagation()"
+      >
+        <div
+          class="flex items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-brand-50/80 to-white px-5 py-4 dark:border-white/[0.06] dark:from-brand-950/30 dark:to-[#0a0c10]"
+        >
+          <div class="flex items-center gap-2.5">
+            <span
+              class="flex size-9 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300"
+              aria-hidden="true"
+            >
+              <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fill-rule="evenodd"
+                  d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 0 1 .628.74v2.288a2.25 2.25 0 0 1-.659 1.59l-4.682 4.683a2.25 2.25 0 0 0-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 0 1 8 18.25v-5.757a2.25 2.25 0 0 0-.659-1.591L2.659 6.22A2.25 2.25 0 0 1 2 4.629V2.34a.75.75 0 0 1 .628-.74Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </span>
+            <div>
+              <h2 class="text-base font-bold text-slate-900 dark:text-white">
+                {{ 'expenses.filterDialogTitle' | transloco }}
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-zinc-500">
+                {{ 'expenses.filterDialogHint' | transloco }}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="closeFilter()"
+            class="ui-btn-ghost ui-btn-sm shrink-0"
+            [attr.aria-label]="'common.cancel' | transloco"
+          >
+            <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path
+                d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-4 px-5 py-5">
+          <label class="block">
+            <span class="ui-label">{{ 'common.category' | transloco }}</span>
+            <select
+              class="ui-input"
+              [value]="draftCategory()"
+              (change)="draftCategory.set($any($event.target).value)"
+            >
+              <option value="all">{{ 'common.all' | transloco }}</option>
+              @for (category of categories(); track category) {
+                <option [value]="category">{{ categoryLabel(category) }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="ui-label">{{ 'common.month' | transloco }}</span>
+            <select
+              class="ui-input"
+              [value]="draftMonth()"
+              (change)="draftMonth.set($any($event.target).value)"
+            >
+              <option value="all">{{ 'expenses.allMonths' | transloco }}</option>
+              @for (month of monthOptions(); track month.id) {
+                <option [value]="month.id">{{ month.label }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="ui-label">{{ 'common.status' | transloco }}</span>
+            <select
+              class="ui-input"
+              [value]="draftStatus()"
+              (change)="draftStatus.set($any($event.target).value)"
+            >
+              @for (option of statusOptions; track option.id) {
+                <option [value]="option.id">{{ option.labelKey | transloco }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <div
+          class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-5 py-4 dark:border-white/[0.06]"
+        >
+          <button type="button" (click)="clearFiltersInDialog()" class="ui-btn-ghost ui-btn-sm">
+            {{ 'expenses.clearFilters' | transloco }}
+          </button>
+          <div class="flex gap-2">
+            <button type="button" (click)="closeFilter()" class="ui-btn-secondary">
+              {{ 'common.cancel' | transloco }}
+            </button>
+            <button type="button" (click)="applyFilter()" class="ui-btn-primary">
+              {{ 'expenses.applyFilters' | transloco }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 
   @if (expenses().length === 0) {
     <div class="ui-empty">
@@ -301,9 +409,14 @@
   } @else if (filteredExpenses().length === 0) {
     <div class="ui-empty">
       <p class="max-w-sm text-sm text-slate-600 dark:text-zinc-500">{{ 'expenses.emptyFiltered' | transloco }}</p>
-      <button type="button" (click)="clearFilters()" class="ui-btn-secondary mt-4">
-        {{ 'expenses.clearFilters' | transloco }}
-      </button>
+      <div class="mt-4 flex flex-wrap justify-center gap-2">
+        <button type="button" (click)="openFilter()" class="ui-btn-secondary">
+          {{ 'expenses.filters' | transloco }}
+        </button>
+        <button type="button" (click)="clearFilters()" class="ui-btn-primary">
+          {{ 'expenses.clearFilters' | transloco }}
+        </button>
+      </div>
     </div>
   } @else {
     <!-- Mobile cards -->
@@ -317,13 +430,7 @@
             <div class="min-w-0">
               <h3 class="font-semibold text-slate-900 dark:text-white">{{ expense.title }}</h3>
               <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                <button
-                  type="button"
-                  (click)="setCategoryFilter(expense.category)"
-                  class="ui-badge ui-badge-neutral cursor-pointer transition hover:bg-brand-50 hover:text-brand-800 dark:hover:bg-brand-950/50"
-                >
-                  {{ ('categories.' + expense.category) | transloco }}
-                </button>
+                <span class="ui-badge ui-badge-neutral">{{ categoryLabel(expense.category) }}</span>
                 @if (expense.paid) {
                   <span class="ui-badge ui-badge-success">{{ 'common.paid' | transloco }}</span>
                 } @else {
@@ -406,13 +513,7 @@
               >
                 <td class="px-4 py-3.5 font-semibold text-slate-900 dark:text-white">{{ expense.title }}</td>
                 <td class="px-4 py-3.5">
-                  <button
-                    type="button"
-                    (click)="setCategoryFilter(expense.category)"
-                    class="ui-badge ui-badge-neutral cursor-pointer transition hover:bg-brand-50 hover:text-brand-800 dark:hover:bg-brand-950/50"
-                  >
-                    {{ ('categories.' + expense.category) | transloco }}
-                  </button>
+                  <span class="ui-badge ui-badge-neutral">{{ categoryLabel(expense.category) }}</span>
                 </td>
                 <td
                   class="px-4 py-3.5 font-semibold tabular-nums"

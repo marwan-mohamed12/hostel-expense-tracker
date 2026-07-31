@@ -1,8 +1,10 @@
-﻿export interface AppData {
+export interface AppData {
   residents: import('./resident.model').Resident[];
   months: import('./payment.model').MonthRecord[];
   payments: import('./payment.model').Payment[];
   expenses: import('./expense.model').Expense[];
+  /** User-defined categories (beyond built-in presets). */
+  customCategories: string[];
 }
 
 export interface DashboardStats {

@@ -1,4 +1,5 @@
-﻿export const EXPENSE_CATEGORIES = [
+/** Built-in presets always offered in the category picker. */
+export const EXPENSE_CATEGORIES = [
   'Electricity',
   'Water',
   'Gas',
@@ -9,21 +10,28 @@
   'Other',
 ] as const;
 
-export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+export type BuiltinExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
-const CATEGORY_SET = new Set<string>(EXPENSE_CATEGORIES);
+/** @deprecated Prefer string categories (presets + user-defined). Kept for call-site compatibility. */
+export type ExpenseCategory = string;
 
-/** Coerce free-text / legacy values to a known preset (case-insensitive). */
-export function normalizeExpenseCategory(value: unknown): ExpenseCategory {
+/**
+ * Normalize a category label:
+ * - empty → Other
+ * - match a built-in preset case-insensitively → canonical preset casing
+ * - otherwise keep the trimmed custom name (user-defined categories allowed)
+ */
+export function normalizeExpenseCategory(value: unknown): string {
   const raw = String(value ?? '').trim();
   if (!raw) {
     return 'Other';
   }
-  if (CATEGORY_SET.has(raw)) {
-    return raw as ExpenseCategory;
-  }
   const match = EXPENSE_CATEGORIES.find((c) => c.toLowerCase() === raw.toLowerCase());
-  return match ?? 'Other';
+  if (match) {
+    return match;
+  }
+  // Collapse internal whitespace for custom labels
+  return raw.replace(/\s+/g, ' ');
 }
 
 export const DEFAULT_MONTHLY_FEE = 250;
