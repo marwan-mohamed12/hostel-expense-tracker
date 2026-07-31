@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LanguageService } from '../../core/i18n/language.service';
 import { HostelStore } from '../../core/services/hostel.store';
-import { confirmDelete, showSuccessToast } from '../../core/utils/swal-dialog';
+import { ToastService } from '../../core/services/toast.service';
+import { confirmDelete } from '../../core/utils/swal-dialog';
 import { Payment } from '../../models/payment.model';
 
 @Component({
@@ -16,6 +17,7 @@ export class PaymentsPage {
   private readonly store = inject(HostelStore);
   private readonly language = inject(LanguageService);
   private readonly transloco = inject(TranslocoService);
+  private readonly toast = inject(ToastService);
 
   readonly monthNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
   readonly months = this.store.monthsNewestFirst;
@@ -86,6 +88,12 @@ export class PaymentsPage {
   createMonth(): void {
     const record = this.store.createMonth(this.newYear(), this.newMonth());
     this.selectedMonthId.set(record.id);
+    this.toast.success(
+      this.transloco.translate('payments.monthOpenedTitle'),
+      this.transloco.translate('payments.monthOpenedText', {
+        month: this.language.formatMonthLabel(record.year, record.month),
+      }),
+    );
   }
 
   async deleteMonth(): Promise<void> {
@@ -123,7 +131,7 @@ export class PaymentsPage {
       }
     }
 
-    await showSuccessToast(
+    this.toast.success(
       this.transloco.translate('payments.deletedTitle'),
       this.transloco.translate('payments.deletedText', { month: month.label }),
     );
@@ -131,12 +139,24 @@ export class PaymentsPage {
 
   togglePaid(payment: Payment): void {
     const nextPaid = !payment.paid;
+    const residentName = this.store.getResidentName(payment.residentId);
     this.store.markPaymentPaid(
       payment.id,
       nextPaid,
       payment.amount,
       nextPaid ? payment.paidAt || new Date().toISOString().slice(0, 10) : undefined,
     );
+    if (nextPaid) {
+      this.toast.success(
+        this.transloco.translate('payments.markedPaidTitle'),
+        this.transloco.translate('payments.markedPaidText', { name: residentName }),
+      );
+    } else {
+      this.toast.success(
+        this.transloco.translate('payments.markedUnpaidTitle'),
+        this.transloco.translate('payments.markedUnpaidText', { name: residentName }),
+      );
+    }
   }
 
   onAmountChange(payment: Payment, value: string | number): void {

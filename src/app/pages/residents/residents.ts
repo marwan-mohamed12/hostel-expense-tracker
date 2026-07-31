@@ -4,7 +4,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DEFAULT_MONTHLY_FEE } from '../../core/constants/app.constants';
 import { HostelStore } from '../../core/services/hostel.store';
-import { confirmDelete, showSuccessToast } from '../../core/utils/swal-dialog';
+import { ToastService } from '../../core/services/toast.service';
+import { confirmDelete } from '../../core/utils/swal-dialog';
 import { Resident } from '../../models/resident.model';
 
 @Component({
@@ -16,6 +17,7 @@ export class ResidentsPage {
   private readonly store = inject(HostelStore);
   private readonly fb = inject(FormBuilder);
   private readonly transloco = inject(TranslocoService);
+  private readonly toast = inject(ToastService);
 
   readonly residents = this.store.residents;
   readonly filter = signal<'all' | 'active' | 'inactive'>('all');
@@ -99,15 +101,35 @@ export class ResidentsPage {
     const editingId = this.editingId();
     if (editingId) {
       this.store.updateResident(editingId, payload);
+      this.toast.success(
+        this.transloco.translate('residents.updatedTitle'),
+        this.transloco.translate('residents.updatedText', { name: payload.name }),
+      );
     } else {
       this.store.addResident(payload);
+      this.toast.success(
+        this.transloco.translate('residents.createdTitle'),
+        this.transloco.translate('residents.createdText', { name: payload.name }),
+      );
     }
 
     this.cancelForm();
   }
 
   toggleActive(resident: Resident): void {
-    this.store.setResidentActive(resident.id, !resident.active);
+    const nextActive = !resident.active;
+    this.store.setResidentActive(resident.id, nextActive);
+    if (nextActive) {
+      this.toast.success(
+        this.transloco.translate('residents.activatedTitle'),
+        this.transloco.translate('residents.activatedText', { name: resident.name }),
+      );
+    } else {
+      this.toast.success(
+        this.transloco.translate('residents.deactivatedTitle'),
+        this.transloco.translate('residents.deactivatedText', { name: resident.name }),
+      );
+    }
   }
 
   async remove(resident: Resident): Promise<void> {
@@ -127,7 +149,7 @@ export class ResidentsPage {
       this.cancelForm();
     }
 
-    await showSuccessToast(
+    this.toast.success(
       this.transloco.translate('residents.removedTitle'),
       this.transloco.translate('residents.removedText', { name: resident.name }),
     );
