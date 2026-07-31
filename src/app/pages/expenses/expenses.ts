@@ -4,7 +4,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { EXPENSE_CATEGORIES } from '../../core/constants/app.constants';
 import { HostelStore } from '../../core/services/hostel.store';
-import { confirmDelete, showSuccessToast } from '../../core/utils/swal-dialog';
+import { ToastService } from '../../core/services/toast.service';
+import { confirmDelete } from '../../core/utils/swal-dialog';
 import { Expense } from '../../models/expense.model';
 
 @Component({
@@ -16,6 +17,7 @@ export class ExpensesPage {
   private readonly store = inject(HostelStore);
   private readonly fb = inject(FormBuilder);
   private readonly transloco = inject(TranslocoService);
+  private readonly toast = inject(ToastService);
 
   readonly categories = EXPENSE_CATEGORIES;
   readonly expenses = this.store.expensesNewestFirst;
@@ -97,8 +99,16 @@ export class ExpensesPage {
     const editingId = this.editingId();
     if (editingId) {
       this.store.updateExpense(editingId, payload);
+      this.toast.success(
+        this.transloco.translate('expenses.updatedTitle'),
+        this.transloco.translate('expenses.updatedText', { title: payload.title }),
+      );
     } else {
       this.store.addExpense(payload);
+      this.toast.success(
+        this.transloco.translate('expenses.createdTitle'),
+        this.transloco.translate('expenses.createdText', { title: payload.title }),
+      );
     }
 
     this.cancelForm();
@@ -106,6 +116,17 @@ export class ExpensesPage {
 
   setPaid(expense: Expense, paid: boolean): void {
     this.store.markExpensePaid(expense.id, paid);
+    if (paid) {
+      this.toast.success(
+        this.transloco.translate('expenses.markedPaidTitle'),
+        this.transloco.translate('expenses.markedPaidText', { title: expense.title }),
+      );
+    } else {
+      this.toast.success(
+        this.transloco.translate('expenses.markedUnpaidTitle'),
+        this.transloco.translate('expenses.markedUnpaidText', { title: expense.title }),
+      );
+    }
   }
 
   async remove(expense: Expense): Promise<void> {
@@ -125,7 +146,7 @@ export class ExpensesPage {
       this.cancelForm();
     }
 
-    await showSuccessToast(
+    this.toast.success(
       this.transloco.translate('expenses.deletedTitle'),
       this.transloco.translate('expenses.deletedText', { title: expense.title }),
     );

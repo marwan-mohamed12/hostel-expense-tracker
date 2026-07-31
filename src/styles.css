@@ -1,5 +1,6 @@
 ﻿@import 'tailwindcss';
 @import 'sweetalert2/dist/sweetalert2.min.css';
+@import 'ngx-toastr/toastr';
 
 html,
 body {

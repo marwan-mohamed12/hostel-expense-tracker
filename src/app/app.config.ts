@@ -5,8 +5,10 @@ import {
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
+import { provideToastr } from 'ngx-toastr';
 import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { LanguageService } from './core/i18n/language.service';
@@ -17,6 +19,16 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(),
+    provideAnimations(),
+    provideToastr({
+      timeOut: 2800,
+      extendedTimeOut: 1200,
+      progressBar: true,
+      closeButton: true,
+      newestOnTop: true,
+      preventDuplicates: true,
+      positionClass: 'toast-top-right',
+    }),
     provideTransloco({
       config: {
         availableLangs: ['en', 'ar'],

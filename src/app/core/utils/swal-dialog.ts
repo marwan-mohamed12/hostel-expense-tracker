@@ -6,6 +6,7 @@ const deleteDialogClasses = {
   cancelButton: 'rounded-xl font-semibold',
 } as const;
 
+/** Destructive confirm dialog only. Success feedback uses ToastService (ngx-toastr). */
 export async function confirmDelete(options: {
   title: string;
   text?: string;
@@ -29,17 +30,4 @@ export async function confirmDelete(options: {
   });
 
   return result.isConfirmed;
-}
-
-export async function showSuccessToast(title: string, text?: string): Promise<void> {
-  await Swal.fire({
-    title,
-    text,
-    icon: 'success',
-    timer: 1800,
-    showConfirmButton: false,
-    customClass: {
-      popup: 'rounded-2xl',
-    },
-  });
 }
