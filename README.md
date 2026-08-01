@@ -1,38 +1,89 @@
 # Hostel Expense Tracker
 
-Internal web app for a hostel to track **resident monthly fees**, **shared expenses**, and the **remaining balance**. Built as a client-only Angular SPA with localStorage persistence (no backend in Phase 1).
+A client-side web app for running a hostel’s shared money: collect monthly fees from residents, log shared expenses, and always know **what balance is left**.
 
-## Features (Phase 1)
+Built as a practical internal tool — not a multi-tenant SaaS. Data stays in the browser; no account or backend is required.
 
-### Dashboard (`/`)
-- Current month paid / unpaid resident counts (**active residents only**)
-- Month collected total and paid expenses total
-- **Current balance** = all paid payments − all **paid** expenses
-- Unpaid residents list and recent expenses
-- All-time totals (collected, paid expenses, unpaid expenses when any)
+---
 
-### Residents (`/residents`)
-- Add, edit, remove residents
-- Per-resident **monthly fee** (EGP; default suggestion 250)
-- Active / inactive status and filter
-- Inactive residents are excluded from payment tracking counts and unpaid lists
+## Overview
 
-### Payments (`/payments`)
-- Auto-create current month; open months manually
-- Seed payment rows for active residents
-- Mark paid / unpaid, edit amount and notes, store payment date
-- Delete a month (and its payment rows) with confirmation
+Hostel managers track:
 
-### Expenses (`/expenses`)
-- Record title, category, amount, date, description, added by
-- **Paid / unpaid** expenses — unpaid are tracked but **do not** reduce balance
-- Edit, delete, and quick mark paid / unpaid
-- Category presets (Electricity, Water, Gas, Internet, Repairs, Cleaning, Supplies, Other)
+- **Who lives there** and what each person pays monthly  
+- **Who paid this month** and who still owes  
+- **Shared costs** (utilities, repairs, supplies, custom categories)  
+- **Current balance** — money collected minus money actually spent  
 
-### UX
-- Responsive layout: burger nav + cards on mobile; horizontal nav + tables on desktop
-- SweetAlert2 for destructive confirms; custom soft-ledger toasts for one-line success feedback
-- Teal / slate Tailwind UI
+Currency is **EGP**. The UI is fully bilingual (**English** and **Arabic** with RTL), works on phone and desktop, and includes light / dark / system themes.
+
+---
+
+## Screenshots
+
+> **TODO — add screenshots here.** Capture the app while it has a bit of sample data so the UI looks realistic. Suggested files under `docs/screenshots/` (or any path you prefer), then link them below.
+
+| Screen | What to capture | Placeholder |
+|--------|-----------------|-------------|
+| Dashboard | Balance hero, month stats, unpaid list | `docs/screenshots/dashboard.png` |
+| Residents | List + add/edit form (or history panel) | `docs/screenshots/residents.png` |
+| Payments | Month view with paid/unpaid rows | `docs/screenshots/payments.png` |
+| Expenses | Expense list with filters | `docs/screenshots/expenses.png` |
+| Statistics | Charts + balance timeline | `docs/screenshots/statistics.png` |
+| Dark mode / Arabic (optional) | Same page in dark theme or RTL | `docs/screenshots/dark-or-ar.png` |
+
+Example markdown once files exist:
+
+```markdown
+![Dashboard](docs/screenshots/dashboard.png)
+```
+
+---
+
+## Features
+
+### Dashboard
+Home overview for the selected month: paid vs unpaid resident counts, amount collected, paid expenses, collection progress, unpaid residents list, recent expenses, and the overall **current balance**. Browse any month with prev/next controls or a year calendar.
+
+### Residents
+Add, edit, and remove residents. Each resident has their own **monthly fee** (default suggestion 250 EGP), room, phone, notes, and **active / inactive** status. Inactive people are kept for history but excluded from month paid/unpaid tracking. Open a resident’s **payment history** with multi-month calendar filtering.
+
+### Payments
+Track fees **per calendar month**. The current month is created automatically; open other months when you need them. Seed rows for active residents, mark paid/unpaid, set amount and payment date, add notes. Delete a whole month (and its payment rows) when it was opened by mistake.
+
+### Expenses
+Log shared costs with title, category, amount, date, description, and who added it. Expenses can be **paid or unpaid** — unpaid ones stay visible for planning but **do not reduce balance**. Built-in categories (Electricity, Water, Gas, Internet, Repairs, Cleaning, Supplies, Other) plus **custom categories**. Filter the history by month, category, and paid status.
+
+### Statistics
+Charts and a balance story over time:
+
+- Monthly expenses and collections  
+- Collection rate trend  
+- Spend by category  
+- Balance over months  
+- Chronological timeline of paid payments in and paid expenses out, with running balance  
+
+### Experience
+- **English & Arabic** (Egyptian dialect for AR), language toggle, full RTL support  
+- **Light / dark / system** theme  
+- Guided **“How it works”** tour on first visit (reopen anytime from **?**)  
+- Responsive layout: card lists + burger menu on mobile; tables + pill nav on desktop  
+- Soft-ledger teal UI with confirm dialogs for destructive actions and short success toasts  
+
+---
+
+## How balance works
+
+| Concept | Rule |
+|---------|------|
+| **Collected** | Sum of payments marked **paid** |
+| **Paid expenses** | Sum of expenses marked **paid** |
+| **Unpaid expenses** | Tracked for visibility only — **not** subtracted |
+| **Current balance** | All-time collected − all-time **paid** expenses |
+
+Only **active** residents count toward month paid/unpaid UI and unpaid lists. Historical paid amounts from inactive residents still count toward all-time collected and balance.
+
+---
 
 ## Tech stack
 
@@ -40,20 +91,27 @@ Internal web app for a hostel to track **resident monthly fees**, **shared expen
 |------|--------|
 | Framework | Angular 22 (standalone components, signals) |
 | Styling | Tailwind CSS 4 |
-| Forms | Angular Reactive Forms (+ template forms for quick payment edits) |
-| Dialogs | SweetAlert2 (confirms) + custom ToastService (toasts) |
+| Charts | ApexCharts via `ng-apexcharts` |
+| i18n | `@jsverse/transloco` (runtime EN/AR) |
+| Dialogs | SweetAlert2 (destructive confirms) |
+| Feedback | Custom toast service (no third-party toast lib) |
 | State | `HostelStore` + Angular signals |
-| Persistence | `localStorage` (`hostel-expense-tracker-data-v1`) |
+| Persistence | `localStorage` |
 | Tests | Vitest (`ng test`) |
-| Rendering | SPA only (SSR removed for localStorage simplicity) |
+| Rendering | Client-only SPA (no SSR) |
+
+---
 
 ## Getting started
+
+**Requirements:** Node.js and npm.
 
 ```bash
 npm install
 npm start
-# → http://localhost:4200/
 ```
+
+Open [http://localhost:4200/](http://localhost:4200/).
 
 Other scripts:
 
@@ -64,28 +122,53 @@ npm test        # unit tests (Vitest)
 
 On some Windows PowerShell setups, use `npm.cmd` if script execution policy blocks `npm.ps1`.
 
+---
+
 ## Project structure
 
 ```text
 src/app/
-  core/           # constants, HostelStore, storage, SweetAlert + ToastService
+  core/           # store, storage, theme, i18n, toasts, constants
   models/         # Resident, Payment, Expense, AppData
-  pages/          # dashboard, residents, payments, expenses
-  shared/         # toast host, user journey
+  pages/          # dashboard, statistics, residents, payments, expenses
+  shared/         # toast host, user journey, month calendar picker
   app.ts          # shell + navigation
   app.routes.ts
-instructions/     # agent / project context notes
+public/i18n/      # en.json, ar.json
+instructions/     # project domain notes for contributors / agents
 ```
 
-## Business rules (short)
+### Routes
 
-- Currency: **EGP**
-- Balance uses **only paid payments** and **only paid expenses**
-- Unpaid expenses stay visible for tracking but do not subtract from balance left
-- Inactive residents keep history for all-time collected, but are out of month paid/unpaid UI
+| Path | Page |
+|------|------|
+| `/` | Dashboard |
+| `/statistics` | Statistics (lazy-loaded) |
+| `/residents` | Residents |
+| `/payments` | Monthly payments |
+| `/expenses` | Expenses |
+
+### Browser storage
+
+| Key | Purpose |
+|-----|---------|
+| `hostel-expense-tracker-data-v1` | Residents, months, payments, expenses, custom categories |
+| `hostel-expense-tracker-lang` | `en` / `ar` |
+| `hostel-expense-tracker-theme` | `light` / `dark` / `system` |
+| `hostel-expense-tracker-journey-v1` | Guided tour completion |
+
+Clearing site data for this origin resets the app.
+
+---
 
 ## Notes
 
-- Data lives in the browser (`localStorage`). Clearing site data resets the app.
-- No authentication or multi-device sync in Phase 1.
-- See `instructions/PROJECT_CONTEXT.md` for full domain rules and agent handoff notes.
+- All data lives **in the browser**. There is no server sync or multi-device account yet.  
+- Prefer a local backup strategy if the data matters (browser clear, another device, or private mode will lose it).  
+- Deeper domain rules and contributor conventions live in [`instructions/PROJECT_CONTEXT.md`](instructions/PROJECT_CONTEXT.md).
+
+---
+
+## License
+
+Private / internal use unless a license file is added later.
