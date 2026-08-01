@@ -42,6 +42,7 @@ export class App {
 
   readonly navItems = [
     { path: '/', labelKey: 'nav.dashboard', exact: true },
+    { path: '/statistics', labelKey: 'nav.statistics', exact: false },
     { path: '/residents', labelKey: 'nav.residents', exact: false },
     { path: '/payments', labelKey: 'nav.payments', exact: false },
     { path: '/expenses', labelKey: 'nav.expenses', exact: false },
