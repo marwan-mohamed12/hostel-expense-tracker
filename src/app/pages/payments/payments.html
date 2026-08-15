@@ -226,8 +226,11 @@
           {{ 'payments.notOpened' | transloco }}
         </p>
         @if (auth.isAdmin()) {
-          <button type="button" (click)="startTracking()" class="ui-btn-primary mt-4">
-            {{ 'payments.startTracking' | transloco }}
+          <button type="button" (click)="startTracking()" class="ui-btn-primary mt-4" [disabled]="busy()">
+            @if (busy()) {
+              <span class="ui-spinner" aria-hidden="true"></span>
+            }
+            {{ (busy() ? 'common.saving' : 'payments.startTracking') | transloco }}
           </button>
         }
       </div>
@@ -308,13 +311,17 @@
                 <button
                   type="button"
                   (click)="togglePaid(payment)"
-                  class="w-full rounded-xl px-3 py-2.5 text-sm font-semibold shadow-sm transition active:scale-[0.98]"
+                  class="inline-flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold shadow-sm transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+                  [disabled]="busy()"
                   [class]="
                     payment.paid
                       ? 'border border-amber-200 bg-amber-100 text-amber-950 hover:bg-amber-200'
                       : 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700'
                   "
                 >
+                  @if (busy()) {
+                    <span class="ui-spinner" aria-hidden="true"></span>
+                  }
                   {{ (payment.paid ? 'common.markUnpaid' : 'common.markPaid') | transloco }}
                 </button>
               }
@@ -392,13 +399,17 @@
                     <button
                       type="button"
                       (click)="togglePaid(payment)"
-                      class="rounded-lg px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98]"
+                      class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+                      [disabled]="busy()"
                       [class]="
                         payment.paid
                           ? 'bg-amber-100 text-amber-950 hover:bg-amber-200'
                           : 'bg-emerald-600 text-white hover:bg-emerald-700'
                       "
                     >
+                      @if (busy()) {
+                        <span class="ui-spinner" aria-hidden="true"></span>
+                      }
                       {{ (payment.paid ? 'common.markUnpaid' : 'common.markPaid') | transloco }}
                     </button>
                   }
