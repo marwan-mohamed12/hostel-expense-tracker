@@ -208,7 +208,7 @@
       <h2 class="font-semibold text-slate-900 dark:text-white">
         {{ 'payments.monthPayments' | transloco: { month: selectedMonth().label } }}
       </h2>
-      @if (monthIsOpen()) {
+      @if (monthIsOpen() && auth.isAdmin()) {
         <button
           type="button"
           (click)="deleteMonth()"
@@ -225,9 +225,11 @@
         <p class="max-w-sm text-sm text-slate-600 dark:text-zinc-500">
           {{ 'payments.notOpened' | transloco }}
         </p>
-        <button type="button" (click)="startTracking()" class="ui-btn-primary mt-4">
-          {{ 'payments.startTracking' | transloco }}
-        </button>
+        @if (auth.isAdmin()) {
+          <button type="button" (click)="startTracking()" class="ui-btn-primary mt-4">
+            {{ 'payments.startTracking' | transloco }}
+          </button>
+        }
       </div>
     } @else if (rows().length === 0) {
       <div class="ui-empty m-4 border-0 bg-slate-50/80 py-10 shadow-none dark:bg-[#0a0c10]">
@@ -268,7 +270,8 @@
                   type="number"
                   min="0"
                   step="1"
-                  class="ui-input"
+                  class="ui-input disabled:cursor-not-allowed disabled:opacity-80"
+                  [disabled]="!auth.isAdmin()"
                   [ngModel]="payment.amount"
                   (ngModelChange)="onAmountChange(payment, $event)"
                 />
@@ -281,7 +284,7 @@
                 <input
                   type="date"
                   class="ui-input disabled:cursor-not-allowed disabled:opacity-60"
-                  [disabled]="!payment.paid"
+                  [disabled]="!auth.isAdmin() || !payment.paid"
                   [ngModel]="payment.paidAt"
                   (ngModelChange)="onPaidAtChange(payment, $event)"
                 />
@@ -293,25 +296,28 @@
                 </span>
                 <input
                   type="text"
-                  class="ui-input"
+                  class="ui-input disabled:cursor-not-allowed disabled:opacity-80"
+                  [disabled]="!auth.isAdmin()"
                   [placeholder]="'common.optional' | transloco"
                   [ngModel]="payment.notes"
                   (ngModelChange)="onNotesChange(payment, $event)"
                 />
               </label>
 
-              <button
-                type="button"
-                (click)="togglePaid(payment)"
-                class="w-full rounded-xl px-3 py-2.5 text-sm font-semibold shadow-sm transition active:scale-[0.98]"
-                [class]="
-                  payment.paid
-                    ? 'border border-amber-200 bg-amber-100 text-amber-950 hover:bg-amber-200'
-                    : 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700'
-                "
-              >
-                {{ (payment.paid ? 'common.markUnpaid' : 'common.markPaid') | transloco }}
-              </button>
+              @if (auth.isAdmin()) {
+                <button
+                  type="button"
+                  (click)="togglePaid(payment)"
+                  class="w-full rounded-xl px-3 py-2.5 text-sm font-semibold shadow-sm transition active:scale-[0.98]"
+                  [class]="
+                    payment.paid
+                      ? 'border border-amber-200 bg-amber-100 text-amber-950 hover:bg-amber-200'
+                      : 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-700'
+                  "
+                >
+                  {{ (payment.paid ? 'common.markUnpaid' : 'common.markPaid') | transloco }}
+                </button>
+              }
             </div>
           </article>
         }
@@ -347,7 +353,8 @@
                     type="number"
                     min="0"
                     step="1"
-                    class="ui-input w-28 !py-1.5"
+                    class="ui-input w-28 !py-1.5 disabled:cursor-not-allowed disabled:opacity-80"
+                    [disabled]="!auth.isAdmin()"
                     [ngModel]="payment.amount"
                     (ngModelChange)="onAmountChange(payment, $event)"
                   />
@@ -365,7 +372,7 @@
                   <input
                     type="date"
                     class="ui-input !w-auto !py-1.5 disabled:cursor-not-allowed disabled:opacity-60"
-                    [disabled]="!payment.paid"
+                    [disabled]="!auth.isAdmin() || !payment.paid"
                     [ngModel]="payment.paidAt"
                     (ngModelChange)="onPaidAtChange(payment, $event)"
                   />
@@ -373,25 +380,28 @@
                 <td class="px-4 py-3 text-start">
                   <input
                     type="text"
-                    class="ui-input min-w-40 !py-1.5"
+                    class="ui-input min-w-40 !py-1.5 disabled:cursor-not-allowed disabled:opacity-80"
+                    [disabled]="!auth.isAdmin()"
                     [placeholder]="'common.optional' | transloco"
                     [ngModel]="payment.notes"
                     (ngModelChange)="onNotesChange(payment, $event)"
                   />
                 </td>
                 <td class="px-4 py-3 text-end">
-                  <button
-                    type="button"
-                    (click)="togglePaid(payment)"
-                    class="rounded-lg px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98]"
-                    [class]="
-                      payment.paid
-                        ? 'bg-amber-100 text-amber-950 hover:bg-amber-200'
-                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    "
-                  >
-                    {{ (payment.paid ? 'common.markUnpaid' : 'common.markPaid') | transloco }}
-                  </button>
+                  @if (auth.isAdmin()) {
+                    <button
+                      type="button"
+                      (click)="togglePaid(payment)"
+                      class="rounded-lg px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98]"
+                      [class]="
+                        payment.paid
+                          ? 'bg-amber-100 text-amber-950 hover:bg-amber-200'
+                          : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                      "
+                    >
+                      {{ (payment.paid ? 'common.markUnpaid' : 'common.markPaid') | transloco }}
+                    </button>
+                  }
                 </td>
               </tr>
             }

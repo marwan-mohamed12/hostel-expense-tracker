@@ -18,6 +18,7 @@ import {
   ChartComponent,
 } from 'ng-apexcharts';
 import { LanguageService } from '../../core/i18n/language.service';
+import { AuthService } from '../../core/services/auth.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -42,6 +43,7 @@ export class StatisticsPage {
   private readonly language = inject(LanguageService);
   private readonly transloco = inject(TranslocoService);
   private readonly theme = inject(ThemeService);
+  readonly auth = inject(AuthService);
 
   readonly monthlySeries = computed(() => {
     this.store.payments();

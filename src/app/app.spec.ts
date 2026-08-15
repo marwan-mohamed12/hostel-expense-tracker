@@ -28,6 +28,16 @@ const en = {
     openAria: 'Open guided tour',
     navLabel: 'How it works',
   },
+  auth: {
+    logout: 'Log out',
+    logoutAria: 'Log out of the tracker',
+    roleAdmin: 'Admin',
+    roleUser: 'Viewer',
+  },
+  common: {
+    loading: 'Loading…',
+    saving: 'Saving…',
+  },
 };
 
 describe('App', () => {

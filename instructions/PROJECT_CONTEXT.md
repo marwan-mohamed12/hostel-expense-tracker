@@ -90,8 +90,9 @@ Every expense record must include:
 | Success / action toasts | **Custom ToastService** | Soft-ledger corner toasts (no third-party toast lib); one sentence per toast |
 | Routing | `@angular/router` | SPA client routes |
 | Rendering | **SPA only (no SSR)** | SSR was removed intentionally |
-| Persistence | **localStorage** | Client-side for v1; no backend yet |
-| State | **HostelStore** service + Angular signals | Single source of truth in the app |
+| Persistence | **Spring Boot + JPA/Hibernate + SQLite** | One JDBC driver (SQLite). Switch DB later by adding that driver and changing properties. Backend: `F:\grok\hostel-expense-tracker-BE`. |
+| Auth | JWT + roles `USER` / `ADMIN` | Viewer sees all data; admin can create/edit/delete |
+| State | **HostelStore** service + Angular signals | Loaded from `GET /api/bootstrap`; mutations go through HTTP |
 | i18n | **@jsverse/transloco** (runtime) | EN + AR; runtime language switch; RTL for Arabic |
 | Charts / statistics | **ApexCharts** via `ng-apexcharts` | Phase 3 **Statistics** page (`/statistics`) |
 | Tests | Vitest (`ng test`) | |
@@ -151,9 +152,8 @@ Every expense record must include:
 - Prefer logical CSS where possible (`ms-*`, `text-start`, `text-end`) for RTL.
 
 ### Why SPA (no SSR)
-- App uses **localStorage** heavily.
 - SSR/prerender complicates hydration and browser-only APIs.
-- This is a private hostel tool; SEO/SSR is not needed for v1.
+- This is a private hostel tool; SEO/SSR is not needed.
 
 ### ⚠️ CRITICAL: Always work on the main repo — never the Grok worktree
 
@@ -180,12 +180,17 @@ That worktree is **not** where the user runs the app or edits in their IDE. Edit
 ## 4. How to run
 
 ```bash
+cd F:\grok\hostel-expense-tracker-BE
+mvn spring-boot:run   # API → http://localhost:8080
+
 cd F:\grok\hostel-expense-tracker
 npm install   # if needed
-npm start     # ng serve → http://localhost:4200/
+npm start     # ng serve + /api proxy → http://localhost:4200/
 npm run build
 npm test
 ```
+
+Seeded users: `admin` / `admin123` (ADMIN), `viewer` / `viewer123` (USER, read-only).
 
 On some Windows PowerShell setups, use `npm.cmd` instead of `npm` if script execution policy blocks `npm.ps1`.
 
@@ -240,18 +245,21 @@ public/
 
 | Path | Page | Purpose |
 |------|------|---------|
+| `/login` | Login | Username/password (public) |
 | `/` | Dashboard | Paid/unpaid, collected, expenses, balance |
-| `/residents` | Residents | Manage residents |
-| `/payments` | Payments | Monthly payment tracking |
-| `/expenses` | Expenses | Expense CRUD |
+| `/residents` | Residents | Manage residents (write = admin) |
+| `/payments` | Payments | Monthly payment tracking (write = admin) |
+| `/expenses` | Expenses | Expense CRUD (write = admin) |
+| `/statistics` | Statistics | Charts + timeline |
 | `**` | redirect to `/` | |
 
 ### Storage
-- Key: `hostel-expense-tracker-data-v1` (see `STORAGE_KEY`)
-- Shape: `{ residents, months, payments, expenses }`
+- **Domain data:** Spring Boot API (`GET /api/bootstrap`). Do **not** write `hostel-expense-tracker-data-v1` anymore.
+- JWT: `sessionStorage` key `hostel-expense-tracker-token`
 - Theme preference: `hostel-expense-tracker-theme` (`light` | `dark` | `system`)
 - Language: `hostel-expense-tracker-lang` (`en` | `ar`)
 - User journey completed: `hostel-expense-tracker-journey-v1` (`done` when finished/skipped)
+- Import old localStorage JSON: admin `POST /api/admin/import`
 
 ### User journey (guided tour)
 - **Purpose:** Teach the real workflow so a new user knows what to do: residents → payments → expenses → dashboard balance.
@@ -377,7 +385,7 @@ Treat these as **done** unless asked to change them:
    - **Mobile (< md):** burger nav + card lists; **Desktop (md+):** pill nav + data tables
 4. Prefer **SweetAlert2** for destructive confirmations and custom **`ToastService`** for success/action feedback — never native `alert` / `confirm`. One short sentence per toast.
 5. Do **not** reintroduce SSR unless the user asks.
-6. Do **not** add a backend unless the user asks; localStorage is intentional for v1.
+6. Domain data must go through the Spring Boot API (`F:\grok\hostel-expense-tracker-BE`). Do not persist hostel data in localStorage. Theme, language, and tour completion may stay in localStorage.
 7. Do **not** hardcode a single global fee of 250 as the only allowed amount; fee is per resident.
 8. After non-trivial changes, run `npm run build` (or `npm.cmd run build`) **in the main repo** to verify.
 9. Do not create unsolicited markdown docs; this `instructions/` folder is the exception requested by the user for agent handoff.
@@ -397,7 +405,7 @@ These are optional next steps, not commitments:
 - Text search on expenses and residents
 - Edit payment history validation rules
 - Further mobile polish / offline PWA
-- Backend + multi-device sync + auth (only if needed later)
+- ~~Backend + multi-device sync + auth~~ — **done** (`F:\grok\hostel-expense-tracker-BE`, JWT, USER/ADMIN)
 - Additional locales beyond EN/AR
 - Locale-aware number/date formatting (`ar-EG` digits/calendars) if requested
 
@@ -472,4 +480,4 @@ These are optional next steps, not commitments:
 
 ---
 
-*Last updated: Statistics page (`/statistics`, lazy) split from Dashboard; Phase 3 ApexCharts + balance timeline (issue #19); custom toasts; resident history multi-select calendar; Phase 2 filters/navigators; user journey; dark mode; UI/UX redesign; SweetAlert2; EN/AR i18n + RTL; unpaid expenses do not reduce balance; always work on main repo `F:\grok\hostel-expense-tracker` (never Grok worktree alone). Update this file when major product/architecture decisions change.*
+*Last updated: Backend uses JPA/Hibernate with a single SQLite JDBC driver (not a bundle of DBs). Properties + gitignored local file. Docker Compose Postgres kept optional. Auth + Spring Boot at `F:\grok\hostel-expense-tracker-BE`. Always work on main repo `F:\grok\hostel-expense-tracker` for the SPA.*

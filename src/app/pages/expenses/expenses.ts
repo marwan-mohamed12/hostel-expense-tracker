@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { EXPENSE_CATEGORIES } from '../../core/constants/app.constants';
 import { LanguageService } from '../../core/i18n/language.service';
+import { AuthService } from '../../core/services/auth.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { ToastService } from '../../core/services/toast.service';
 import { confirmDelete } from '../../core/utils/swal-dialog';
@@ -30,6 +31,7 @@ export class ExpensesPage {
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
   readonly language = inject(LanguageService);
+  readonly auth = inject(AuthService);
 
   readonly categories = this.store.allCategories;
   readonly expenses = this.store.expensesNewestFirst;
@@ -218,13 +220,16 @@ export class ExpensesPage {
     }
   }
 
-  addNewCategory(): void {
+  async addNewCategory(): Promise<void> {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
     const name = this.newCategoryName().trim();
     if (name.length < 2) {
       this.toast.error(this.transloco.translate('expenses.categoryNameError'));
       return;
     }
-    const created = this.store.addCategory(name);
+    const created = await this.store.addCategory(name);
     this.form.controls.category.setValue(created);
     this.newCategoryName.set('');
     this.showNewCategory.set(false);
@@ -245,7 +250,7 @@ export class ExpensesPage {
       amount: null,
       date: new Date().toISOString().slice(0, 10),
       description: '',
-      addedBy: '',
+      addedBy: this.auth.currentUser()?.displayName ?? '',
       paid: true,
     });
     this.showForm.set(true);
@@ -256,7 +261,7 @@ export class ExpensesPage {
     this.showNewCategory.set(false);
     this.newCategoryName.set('');
     // Ensure category is in the picker list (e.g. custom from older data).
-    this.store.addCategory(expense.category);
+    void this.store.addCategory(expense.category);
     this.form.setValue({
       title: expense.title,
       category: expense.category,
@@ -276,7 +281,10 @@ export class ExpensesPage {
     this.newCategoryName.set('');
   }
 
-  save(): void {
+  async save(): Promise<void> {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.toast.error(this.transloco.translate('expenses.formInvalidToast'));
@@ -296,12 +304,12 @@ export class ExpensesPage {
 
     const editingId = this.editingId();
     if (editingId) {
-      this.store.updateExpense(editingId, payload);
+      await this.store.updateExpense(editingId, payload);
       this.toast.success(
         this.transloco.translate('expenses.updatedToast', { title: payload.title }),
       );
     } else {
-      this.store.addExpense(payload);
+      await this.store.addExpense(payload);
       this.toast.success(
         this.transloco.translate('expenses.createdToast', { title: payload.title }),
       );
@@ -310,8 +318,11 @@ export class ExpensesPage {
     this.cancelForm();
   }
 
-  setPaid(expense: Expense, paid: boolean): void {
-    this.store.markExpensePaid(expense.id, paid);
+  async setPaid(expense: Expense, paid: boolean): Promise<void> {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
+    await this.store.markExpensePaid(expense.id, paid);
     this.toast.success(
       this.transloco.translate(
         paid ? 'expenses.markedPaidToast' : 'expenses.markedUnpaidToast',
@@ -328,11 +339,11 @@ export class ExpensesPage {
       cancelButtonText: this.transloco.translate('common.cancel'),
     });
 
-    if (!confirmed) {
+    if (!confirmed || !this.auth.isAdmin()) {
       return;
     }
 
-    this.store.removeExpense(expense.id);
+    await this.store.removeExpense(expense.id);
     if (this.editingId() === expense.id) {
       this.cancelForm();
     }

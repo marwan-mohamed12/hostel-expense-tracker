@@ -3,6 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LanguageService } from '../../core/i18n/language.service';
+import { AuthService } from '../../core/services/auth.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { ToastService } from '../../core/services/toast.service';
 import { confirmDelete } from '../../core/utils/swal-dialog';
@@ -18,13 +19,13 @@ export class PaymentsPage {
   private readonly language = inject(LanguageService);
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
+  readonly auth = inject(AuthService);
 
   readonly monthNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
   readonly months = this.store.monthsNewestFirst;
   readonly payments = this.store.payments;
   readonly residents = this.store.residents;
 
-  /** Current month is ensured on store boot; open it by default. */
   readonly selectedMonthId = signal(this.store.ensureCurrentMonth().id);
   readonly monthPickerOpen = signal(false);
   readonly calendarYear = signal(Number(this.selectedMonthId().slice(0, 4)));
@@ -119,16 +120,17 @@ export class PaymentsPage {
    * Already-open months (and the current calendar month) stay available.
    */
   selectMonth(monthId: string): void {
-    this.store.prepareMonthView(monthId);
     this.selectedMonthId.set(monthId);
     this.calendarYear.set(Number(monthId.slice(0, 4)));
     this.monthPickerOpen.set(false);
   }
 
-  /** Explicitly open tracking for a past/unopened month (seeds payment rows). */
-  startTracking(): void {
+  async startTracking(): Promise<void> {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
     const id = this.selectedMonthId();
-    const record = this.store.startTrackingMonth(id);
+    const record = await this.store.startTrackingMonth(id);
     this.selectedMonthId.set(record.id);
     this.toast.success(
       this.transloco.translate('payments.monthOpenedToast', {
@@ -202,7 +204,11 @@ export class PaymentsPage {
       return;
     }
 
-    const recreated = this.store.removeMonth(month.id);
+    if (!this.auth.isAdmin()) {
+      return;
+    }
+
+    const recreated = await this.store.removeMonth(month.id);
     if (recreated) {
       this.selectedMonthId.set(recreated.id);
     } else {
@@ -219,10 +225,13 @@ export class PaymentsPage {
     );
   }
 
-  togglePaid(payment: Payment): void {
+  async togglePaid(payment: Payment): Promise<void> {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
     const nextPaid = !payment.paid;
     const residentName = this.store.getResidentName(payment.residentId);
-    this.store.markPaymentPaid(
+    await this.store.markPaymentPaid(
       payment.id,
       nextPaid,
       payment.amount,
@@ -237,21 +246,27 @@ export class PaymentsPage {
   }
 
   onAmountChange(payment: Payment, value: string | number): void {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
     const amount = Number(value);
     if (Number.isNaN(amount) || amount < 0) {
       return;
     }
-    this.store.updatePayment(payment.id, { amount });
+    void this.store.updatePayment(payment.id, { amount });
   }
 
   onPaidAtChange(payment: Payment, value: string): void {
-    if (!payment.paid) {
+    if (!this.auth.isAdmin() || !payment.paid) {
       return;
     }
-    this.store.updatePayment(payment.id, { paidAt: value || null });
+    void this.store.updatePayment(payment.id, { paidAt: value || null });
   }
 
   onNotesChange(payment: Payment, value: string): void {
-    this.store.updatePayment(payment.id, { notes: value });
+    if (!this.auth.isAdmin()) {
+      return;
+    }
+    void this.store.updatePayment(payment.id, { notes: value });
   }
 }

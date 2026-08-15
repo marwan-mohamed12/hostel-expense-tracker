@@ -5,14 +5,16 @@
       <h1 class="ui-title">{{ 'residents.title' | transloco }}</h1>
       <p class="ui-subtitle">{{ 'residents.subtitle' | transloco }}</p>
     </div>
-    <button type="button" (click)="openCreate()" class="ui-btn-primary">
-      <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-        <path
-          d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"
-        />
-      </svg>
-      {{ 'residents.addResident' | transloco }}
-    </button>
+    @if (auth.isAdmin()) {
+      <button type="button" (click)="openCreate()" class="ui-btn-primary">
+        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path
+            d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"
+          />
+        </svg>
+        {{ 'residents.addResident' | transloco }}
+      </button>
+    }
   </div>
 
   @if (showForm()) {
@@ -140,9 +142,11 @@
         </svg>
       </span>
       <p class="max-w-sm text-sm text-slate-600 dark:text-zinc-500">{{ 'residents.empty' | transloco }}</p>
-      <button type="button" (click)="openCreate()" class="ui-btn-primary mt-4">
-        {{ 'residents.addResident' | transloco }}
-      </button>
+      @if (auth.isAdmin()) {
+        <button type="button" (click)="openCreate()" class="ui-btn-primary mt-4">
+          {{ 'residents.addResident' | transloco }}
+        </button>
+      }
     </div>
   } @else {
     <!-- Mobile cards -->
@@ -193,15 +197,17 @@
             <button type="button" (click)="openHistory(resident)" class="ui-btn-secondary ui-btn-sm">
               {{ 'residents.paymentHistory' | transloco }}
             </button>
-            <button type="button" (click)="toggleActive(resident)" class="ui-btn-secondary ui-btn-sm">
-              {{ (resident.active ? 'residents.deactivate' : 'residents.activate') | transloco }}
-            </button>
-            <button type="button" (click)="openEdit(resident)" class="ui-btn-success ui-btn-sm !border-brand-200 !bg-brand-50 !text-brand-800 hover:!bg-brand-100">
-              {{ 'common.edit' | transloco }}
-            </button>
-            <button type="button" (click)="remove(resident)" class="ui-btn-danger ui-btn-sm">
-              {{ 'common.remove' | transloco }}
-            </button>
+            @if (auth.isAdmin()) {
+              <button type="button" (click)="toggleActive(resident)" class="ui-btn-secondary ui-btn-sm">
+                {{ (resident.active ? 'residents.deactivate' : 'residents.activate') | transloco }}
+              </button>
+              <button type="button" (click)="openEdit(resident)" class="ui-btn-success ui-btn-sm !border-brand-200 !bg-brand-50 !text-brand-800 hover:!bg-brand-100">
+                {{ 'common.edit' | transloco }}
+              </button>
+              <button type="button" (click)="remove(resident)" class="ui-btn-danger ui-btn-sm">
+                {{ 'common.remove' | transloco }}
+              </button>
+            }
           </div>
         </article>
       }
@@ -258,19 +264,21 @@
                     <button type="button" (click)="openHistory(resident)" class="ui-btn-secondary ui-btn-sm">
                       {{ 'residents.paymentHistory' | transloco }}
                     </button>
-                    <button type="button" (click)="toggleActive(resident)" class="ui-btn-secondary ui-btn-sm">
-                      {{ (resident.active ? 'residents.deactivate' : 'residents.activate') | transloco }}
-                    </button>
-                    <button
-                      type="button"
-                      (click)="openEdit(resident)"
-                      class="ui-btn-sm rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 font-semibold text-brand-800 hover:bg-brand-100"
-                    >
-                      {{ 'common.edit' | transloco }}
-                    </button>
-                    <button type="button" (click)="remove(resident)" class="ui-btn-danger ui-btn-sm">
-                      {{ 'common.remove' | transloco }}
-                    </button>
+                    @if (auth.isAdmin()) {
+                      <button type="button" (click)="toggleActive(resident)" class="ui-btn-secondary ui-btn-sm">
+                        {{ (resident.active ? 'residents.deactivate' : 'residents.activate') | transloco }}
+                      </button>
+                      <button
+                        type="button"
+                        (click)="openEdit(resident)"
+                        class="ui-btn-sm rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 font-semibold text-brand-800 hover:bg-brand-100"
+                      >
+                        {{ 'common.edit' | transloco }}
+                      </button>
+                      <button type="button" (click)="remove(resident)" class="ui-btn-danger ui-btn-sm">
+                        {{ 'common.remove' | transloco }}
+                      </button>
+                    }
                   </div>
                 </td>
               </tr>

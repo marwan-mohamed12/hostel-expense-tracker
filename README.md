@@ -2,7 +2,7 @@
 
 A client-side web app for running a hostel’s shared money: collect monthly fees from residents, log shared expenses, and always know **what balance is left**.
 
-Built as a practical internal tool — not a multi-tenant SaaS. Data stays in the browser; no account or backend is required.
+Built as a practical internal tool — not a multi-tenant SaaS. Domain data lives in the Spring Boot API at `F:\grok\hostel-expense-tracker-BE`. Staff sign in as **admin** (full edit) or **viewer** (see only).
 
 ---
 
@@ -96,7 +96,8 @@ Only **active** residents count toward month paid/unpaid UI and unpaid lists. Hi
 | Dialogs | SweetAlert2 (destructive confirms) |
 | Feedback | Custom toast service (no third-party toast lib) |
 | State | `HostelStore` + Angular signals |
-| Persistence | `localStorage` |
+| Persistence | Spring Boot + Hibernate/JPA + SQLite (`F:\grok\hostel-expense-tracker-BE`) |
+| Auth | JWT — `USER` (view) / `ADMIN` (edit) |
 | Tests | Vitest (`ng test`) |
 | Rendering | Client-only SPA (no SSR) |
 
@@ -104,14 +105,21 @@ Only **active** residents count toward month paid/unpaid UI and unpaid lists. Hi
 
 ## Getting started
 
-**Requirements:** Node.js and npm.
+**Requirements:** Node.js, npm, Java 21, Maven. Start the API first.
 
 ```bash
+cd F:\grok\hostel-expense-tracker-BE
+copy application-local.properties.example application-local.properties
+mvn spring-boot:run
+```
+
+```bash
+cd F:\grok\hostel-expense-tracker
 npm install
 npm start
 ```
 
-Open [http://localhost:4200/](http://localhost:4200/).
+Open [http://localhost:4200/](http://localhost:4200/). Sign in with `admin` / `admin123` or `viewer` / `viewer123`.
 
 Other scripts:
 

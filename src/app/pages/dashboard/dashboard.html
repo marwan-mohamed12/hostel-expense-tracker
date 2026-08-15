@@ -172,9 +172,11 @@
         </svg>
         {{ 'dashboard.trackPayments' | transloco }}
       </a>
-      <a routerLink="/expenses" class="ui-btn-secondary">
-        {{ 'dashboard.addExpense' | transloco }}
-      </a>
+      @if (auth.isAdmin()) {
+        <a routerLink="/expenses" class="ui-btn-secondary">
+          {{ 'dashboard.addExpense' | transloco }}
+        </a>
+      }
       <a routerLink="/statistics" class="ui-btn-secondary">
         {{ 'dashboard.viewStatistics' | transloco }}
       </a>
@@ -457,9 +459,11 @@
       @if (recentExpenses().length === 0) {
         <div class="ui-empty mt-4 border-0 py-8 shadow-none dark:bg-black/40">
           <p class="ui-text-muted text-sm">{{ 'dashboard.noExpenses' | transloco }}</p>
-          <a routerLink="/expenses" class="ui-btn-primary ui-btn-sm mt-3">
-            {{ 'dashboard.addExpense' | transloco }}
-          </a>
+          @if (auth.isAdmin()) {
+            <a routerLink="/expenses" class="ui-btn-primary ui-btn-sm mt-3">
+              {{ 'dashboard.addExpense' | transloco }}
+            </a>
+          }
         </div>
       } @else {
         <ul class="mt-4 divide-y divide-slate-100 dark:divide-white/[0.06]">

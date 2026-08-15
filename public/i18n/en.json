@@ -4,6 +4,23 @@
     "title": "Expense Tracker",
     "documentTitle": "Hostel Expense Tracker"
   },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Use your hostel staff account to open the tracker.",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "signingIn": "Signing in…",
+    "failed": "Could not sign in. Check your username and password."
+  },
+  "auth": {
+    "logout": "Log out",
+    "logoutAria": "Log out of the tracker",
+    "roleAdmin": "Admin",
+    "roleUser": "Viewer",
+    "forbidden": "You can only view data.",
+    "sessionExpired": "Your session ended. Please sign in again."
+  },
   "nav": {
     "dashboard": "Dashboard",
     "statistics": "Statistics",
@@ -26,6 +43,8 @@
     "ariaSystem": "Theme: system. Click for light mode"
   },
   "common": {
+    "loading": "Loading…",
+    "saving": "Saving…",
     "cancel": "Cancel",
     "dismiss": "Dismiss",
     "edit": "Edit",
