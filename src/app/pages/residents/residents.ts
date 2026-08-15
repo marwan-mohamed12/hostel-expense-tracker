@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DEFAULT_MONTHLY_FEE } from '../../core/constants/app.constants';
 import { LanguageService } from '../../core/i18n/language.service';
+import { AuthService } from '../../core/services/auth.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { ToastService } from '../../core/services/toast.service';
 import { confirmDelete } from '../../core/utils/swal-dialog';
@@ -20,6 +21,7 @@ export class ResidentsPage {
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
   readonly language = inject(LanguageService);
+  readonly auth = inject(AuthService);
 
   readonly monthNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
@@ -228,7 +230,10 @@ export class ResidentsPage {
     this.historyCalendarYear.update((y) => y + delta);
   }
 
-  save(): void {
+  async save(): Promise<void> {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -245,30 +250,40 @@ export class ResidentsPage {
     };
 
     const editingId = this.editingId();
-    if (editingId) {
-      this.store.updateResident(editingId, payload);
-      this.toast.success(
-        this.transloco.translate('residents.updatedToast', { name: payload.name }),
-      );
-    } else {
-      this.store.addResident(payload);
-      this.toast.success(
-        this.transloco.translate('residents.createdToast', { name: payload.name }),
-      );
+    try {
+      if (editingId) {
+        await this.store.updateResident(editingId, payload);
+        this.toast.success(
+          this.transloco.translate('residents.updatedToast', { name: payload.name }),
+        );
+      } else {
+        await this.store.addResident(payload);
+        this.toast.success(
+          this.transloco.translate('residents.createdToast', { name: payload.name }),
+        );
+      }
+      this.cancelForm();
+    } catch {
+      this.toast.error(this.transloco.translate('auth.forbidden'));
     }
-
-    this.cancelForm();
   }
 
-  toggleActive(resident: Resident): void {
+  async toggleActive(resident: Resident): Promise<void> {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
     const nextActive = !resident.active;
-    this.store.setResidentActive(resident.id, nextActive);
-    this.toast.success(
-      this.transloco.translate(
-        nextActive ? 'residents.activatedToast' : 'residents.deactivatedToast',
-        { name: resident.name },
-      ),
-    );
+    try {
+      await this.store.setResidentActive(resident.id, nextActive);
+      this.toast.success(
+        this.transloco.translate(
+          nextActive ? 'residents.activatedToast' : 'residents.deactivatedToast',
+          { name: resident.name },
+        ),
+      );
+    } catch {
+      this.toast.error(this.transloco.translate('auth.forbidden'));
+    }
   }
 
   async remove(resident: Resident): Promise<void> {
@@ -279,11 +294,11 @@ export class ResidentsPage {
       cancelButtonText: this.transloco.translate('common.cancel'),
     });
 
-    if (!confirmed) {
+    if (!confirmed || !this.auth.isAdmin()) {
       return;
     }
 
-    this.store.removeResident(resident.id);
+    await this.store.removeResident(resident.id);
     if (this.editingId() === resident.id) {
       this.cancelForm();
     }

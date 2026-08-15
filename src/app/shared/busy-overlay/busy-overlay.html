@@ -1,0 +1,15 @@
+@if (visible()) {
+  <div
+    class="busy-overlay"
+    role="status"
+    aria-live="polite"
+    [attr.aria-label]="(store.busyKind() === 'save' ? 'common.saving' : 'common.loading') | transloco"
+  >
+    <div class="busy-card">
+      <span class="busy-ring" aria-hidden="true"></span>
+      <p class="busy-label">
+        {{ (store.busyKind() === 'save' ? 'common.saving' : 'common.loading') | transloco }}
+      </p>
+    </div>
+  </div>
+}

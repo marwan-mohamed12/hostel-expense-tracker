@@ -3,6 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LanguageService } from '../../core/i18n/language.service';
+import { AuthService } from '../../core/services/auth.service';
 import { HostelStore } from '../../core/services/hostel.store';
 import { UserJourneyService } from '../../core/services/user-journey.service';
 
@@ -16,6 +17,7 @@ export class DashboardPage {
   private readonly language = inject(LanguageService);
   private readonly transloco = inject(TranslocoService);
   private readonly journey = inject(UserJourneyService);
+  readonly auth = inject(AuthService);
 
   /** Session-only hide of the soft banner (full skip uses journey.complete). */
   readonly bannerDismissed = signal(false);
@@ -102,7 +104,6 @@ export class DashboardPage {
    * Current / already-open months stay available; unused browsed months are pruned.
    */
   selectMonth(monthId: string): void {
-    this.store.prepareMonthView(monthId);
     this.selectedMonthId.set(monthId);
     this.calendarYear.set(Number(monthId.slice(0, 4)));
     this.monthPickerOpen.set(false);

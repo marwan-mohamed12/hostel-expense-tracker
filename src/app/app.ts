@@ -3,8 +3,11 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 import { LanguageService } from './core/i18n/language.service';
+import { AuthService } from './core/services/auth.service';
+import { HostelStore } from './core/services/hostel.store';
 import { ThemeService } from './core/services/theme.service';
 import { UserJourneyService } from './core/services/user-journey.service';
+import { BusyOverlayComponent } from './shared/busy-overlay/busy-overlay';
 import { ToastHostComponent } from './shared/toast/toast-host';
 import { UserJourneyComponent } from './shared/user-journey/user-journey';
 
@@ -17,6 +20,7 @@ import { UserJourneyComponent } from './shared/user-journey/user-journey';
     TranslocoPipe,
     ToastHostComponent,
     UserJourneyComponent,
+    BusyOverlayComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -26,6 +30,8 @@ export class App {
   readonly language = inject(LanguageService);
   readonly theme = inject(ThemeService);
   readonly journey = inject(UserJourneyService);
+  readonly auth = inject(AuthService);
+  private readonly store = inject(HostelStore);
 
   readonly menuOpen = signal(false);
 
@@ -53,8 +59,9 @@ export class App {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(() => this.menuOpen.set(false));
 
-    // First visit: open guided tour after shell paints.
-    this.journey.maybeAutoOpen();
+    if (this.auth.isLoggedIn()) {
+      this.journey.maybeAutoOpen();
+    }
   }
 
   toggleMenu(): void {
@@ -75,6 +82,12 @@ export class App {
 
   openJourney(): void {
     this.journey.open(true);
+    this.menuOpen.set(false);
+  }
+
+  logout(): void {
+    this.store.clear();
+    this.auth.logout();
     this.menuOpen.set(false);
   }
 }
