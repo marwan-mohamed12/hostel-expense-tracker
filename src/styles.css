@@ -266,6 +266,21 @@
     @apply text-slate-500 dark:text-zinc-500;
   }
 
+  .ui-spinner {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 999px;
+    border: 2px solid rgb(255 255 255 / 0.35);
+    border-top-color: currentColor;
+    animation: ui-spin 0.65s linear infinite;
+  }
+
+  @keyframes ui-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .ui-icon-btn {
     @apply inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-slate-700 shadow-sm transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800 dark:border-white/10 dark:bg-[#0a0c10] dark:text-zinc-300 dark:hover:border-brand-500/30 dark:hover:bg-brand-950/50 dark:hover:text-brand-300;
   }
