@@ -20,6 +20,7 @@ export class PaymentsPage {
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
   readonly auth = inject(AuthService);
+  readonly busy = this.store.busy;
 
   readonly monthNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
   readonly months = this.store.monthsNewestFirst;

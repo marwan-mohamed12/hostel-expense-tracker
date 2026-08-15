@@ -6,7 +6,7 @@
       <p class="ui-subtitle">{{ 'residents.subtitle' | transloco }}</p>
     </div>
     @if (auth.isAdmin()) {
-      <button type="button" (click)="openCreate()" class="ui-btn-primary">
+      <button type="button" (click)="openCreate()" class="ui-btn-primary" [disabled]="busy()">
         <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path
             d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"
@@ -100,11 +100,14 @@
       </div>
 
       <div class="mt-6 flex justify-end gap-2 border-t border-slate-100 dark:border-white/[0.06] pt-4">
-        <button type="button" (click)="cancelForm()" class="ui-btn-secondary">
+        <button type="button" (click)="cancelForm()" class="ui-btn-secondary" [disabled]="busy()">
           {{ 'common.cancel' | transloco }}
         </button>
-        <button type="submit" class="ui-btn-primary">
-          {{ (editingId() ? 'common.saveChanges' : 'residents.addResident') | transloco }}
+        <button type="submit" class="ui-btn-primary" [disabled]="busy()">
+          @if (busy()) {
+            <span class="ui-spinner" aria-hidden="true"></span>
+          }
+          {{ (busy() ? 'common.saving' : editingId() ? 'common.saveChanges' : 'residents.addResident') | transloco }}
         </button>
       </div>
     </form>
